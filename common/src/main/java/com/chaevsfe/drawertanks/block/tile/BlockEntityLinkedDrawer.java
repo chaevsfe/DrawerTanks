@@ -28,6 +28,7 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity implements com.chae
     private boolean syncPending;
     private long lastSyncTime = -100;
     private long lastTakeTime = Long.MIN_VALUE / 2;
+    private long mirrorCapacity = -1;
 
     private ItemStack mirrorItem = ItemStack.EMPTY;
     private long mirrorCount;
@@ -74,7 +75,7 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity implements com.chae
     }
 
     public boolean setChannelDye (int strip, DyeColor color) {
-        if (strip < 0 || strip >= STRIPS || channels[strip] == color)
+        if (strip < 0 || strip >= STRIPS || channels[strip] == color || isChannelLocked())
             return false;
 
         channels[strip] = color;
@@ -85,6 +86,9 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity implements com.chae
     }
 
     public boolean clearChannels () {
+        if (isChannelLocked())
+            return false;
+
         boolean any = false;
         for (int i = 0; i < STRIPS; i++) {
             any |= channels[i] != DyeColor.WHITE;
@@ -135,9 +139,31 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity implements com.chae
         ItemStack reference = displayItem();
         if (reference.isEmpty())
             reference = forItem;
+
         LinkedItemChannels.Pool pool = pool();
-        return pool != null ? pool.capacityFor(reference)
+        if (pool != null)
+            return pool.capacityFor(reference);
+
+        return mirrorCapacity > 0 ? mirrorCapacity
             : (long) TankConfig.linkedChannelCapacityStacks * (reference.isEmpty() ? 64 : reference.getMaxStackSize());
+    }
+
+    // Storage Drawers keys act through this capability
+    public com.jaquadro.minecraft.storagedrawers.api.storage.IDrawerAttributesModifiable getDrawerAttributes () {
+        LinkedItemChannels.Pool pool = pool();
+        return pool != null ? pool.attributes : mirrorAttributes;
+    }
+
+    public boolean isConcealed () {
+        return getDrawerAttributes().isConcealed();
+    }
+
+    public boolean isShowingQuantity () {
+        return getDrawerAttributes().isShowingQuantity();
+    }
+
+    public boolean isChannelLocked () {
+        return getDrawerAttributes().isItemLocked(com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute.LOCK_EMPTY);
     }
 
     @Override
@@ -298,6 +324,12 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity implements com.chae
                     channels[i] = color == null ? DyeColor.WHITE : color;
                 }
             });
+            mirrorCapacity = input.read("Capacity", Codec.LONG).orElse(-1L);
+            boolean locked = input.read("Locked", Codec.BOOL).orElse(false);
+            mirrorAttributes.setItemLocked(com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute.LOCK_EMPTY, locked);
+            mirrorAttributes.setItemLocked(com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute.LOCK_POPULATED, locked);
+            mirrorAttributes.setIsConcealed(input.read("Concealed", Codec.BOOL).orElse(false));
+            mirrorAttributes.setIsShowingQuantity(input.read("ShowQuantity", Codec.BOOL).orElse(false));
             mirrorItem = input.read("MirrorItem", ItemStack.CODEC).orElse(ItemStack.EMPTY);
             mirrorCount = input.read("MirrorCount", Codec.LONG).orElse(0L);
         }
@@ -308,6 +340,10 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity implements com.chae
             for (DyeColor color : channels)
                 ids.add(color.getId());
             output.store("Channels", Codec.INT.listOf(), ids);
+            output.store("Capacity", Codec.LONG, capacityItems());
+            output.store("Locked", Codec.BOOL, isChannelLocked());
+            output.store("Concealed", Codec.BOOL, getDrawerAttributes().isConcealed());
+            output.store("ShowQuantity", Codec.BOOL, getDrawerAttributes().isShowingQuantity());
             if (!mirrorItem.isEmpty()) {
                 output.store("MirrorItem", ItemStack.CODEC, mirrorItem);
                 output.store("MirrorCount", Codec.LONG, mirrorCount);

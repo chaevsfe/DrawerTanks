@@ -60,6 +60,7 @@ public class BlockEntityLinkedDrawerRenderer implements BlockEntityRenderer<Bloc
         renderState.itemState = null;
         renderState.countText = null;
         renderState.channelSprites = null;
+        renderState.lockSprite = null;
 
         if (blockEntity.getLevel() != null && renderState.blockState.hasProperty(BlockLinkedDrawer.FACING)) {
             Direction facing = renderState.blockState.getValue(BlockLinkedDrawer.FACING);
@@ -74,13 +75,19 @@ public class BlockEntityLinkedDrawerRenderer implements BlockEntityRenderer<Bloc
                 Identifier.withDefaultNamespace("block/" + color.getSerializedName() + "_wool")));
         }
         renderState.channelSprites = sprites;
+        if (blockEntity.isChannelLocked()) {
+            renderState.lockSprite = Minecraft.getInstance().getAtlasManager().get(new SpriteId(TextureAtlas.LOCATION_BLOCKS,
+                Identifier.fromNamespaceAndPath("storagedrawers", "block/indicator/lock_icon")));
+        }
 
-        ItemStack item = blockEntity.displayItem();
+        ItemStack item = blockEntity.isConcealed() ? ItemStack.EMPTY : blockEntity.displayItem();
         if (!item.isEmpty()) {
             renderState.itemState = new ItemStackRenderState();
             itemModelResolver.updateForTopItem(renderState.itemState, item, ItemDisplayContext.GUI, blockEntity.getLevel(), null, (int) blockEntity.getBlockPos().asLong());
-            long count = blockEntity.displayCount();
-            renderState.countText = CountFormatter.format(font, (int) Math.min(Integer.MAX_VALUE, count));
+            if (blockEntity.isShowingQuantity()) {
+                long count = blockEntity.displayCount();
+                renderState.countText = CountFormatter.format(font, (int) Math.min(Integer.MAX_VALUE, count));
+            }
         }
     }
 
@@ -137,6 +144,16 @@ public class BlockEntityLinkedDrawerRenderer implements BlockEntityRenderer<Bloc
         public void render (PoseStack.Pose pose, VertexConsumer vertexConsumer) {
             Matrix4f matrix = pose.pose();
             int light = renderState.lightCoords;
+
+            if (renderState.lockSprite != null) {
+                // sits just proud of the strips, centred on the lid
+                float ly = 1f + UNIT + 0.001f;
+                var lock = renderState.lockSprite;
+                quad(matrix, pose, vertexConsumer, light,
+                    5.5f * UNIT, ly, 4 * UNIT, 5.5f * UNIT, ly, 12 * UNIT,
+                    10.5f * UNIT, ly, 12 * UNIT, 10.5f * UNIT, ly, 4 * UNIT,
+                    lock.getU0(), lock.getV0(), lock.getU1(), lock.getV1());
+            }
 
             for (int i = 0; i < renderState.channelSprites.length; i++) {
                 var sprite = renderState.channelSprites[i];

@@ -1,6 +1,8 @@
 package com.chaevsfe.drawertanks.block;
 
 import com.chaevsfe.drawertanks.block.tile.BlockEntityLinkedDrawer;
+import com.chaevsfe.drawertanks.block.tile.BlockEntityTank;
+import com.jaquadro.minecraft.storagedrawers.item.ItemUpgrade;
 import com.chaevsfe.drawertanks.block.tile.LinkedItemChannels;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
 import com.mojang.serialization.MapCodec;
@@ -106,8 +108,32 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
             return InteractionResult.PASS;
         }
 
-        // Insertion happens in useWithoutItem, the way Storage Drawers does it: vanilla skips
-        // useItemOn when the player sneaks with a full hand, so doing it here breaks shift-click.
+        // upgrades go into the channel rather than being stored as items
+        if (stack.getItem() instanceof ItemUpgrade) {
+            if (!(level.getBlockEntity(pos) instanceof BlockEntityLinkedDrawer drawer))
+                return InteractionResult.PASS;
+
+            if (!BlockEntityTank.upgradeApplies(stack) || !drawer.upgrades().canAddUpgrade(stack))
+                return InteractionResult.PASS;
+
+            if (level.isClientSide())
+                return InteractionResult.SUCCESS;
+
+            if (drawer.upgrades().addUpgrade(stack)) {
+                drawer.refreshUpgradeMirror();
+                drawer.onPoolChanged();
+                if (!player.hasInfiniteMaterials())
+                    stack.shrink(1);
+                return InteractionResult.SUCCESS;
+            }
+
+            return InteractionResult.PASS;
+        }
+
+        // let Storage Drawers keys run their own useOn instead of being stored
+        if (stack.getItem() instanceof com.jaquadro.minecraft.storagedrawers.item.ItemKey)
+            return InteractionResult.PASS;
+
         return InteractionResult.TRY_WITH_EMPTY_HAND;
     }
 
@@ -153,7 +179,7 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
         if (pool == null)
             return InteractionResult.PASS;
 
-        if (!pool.isEmpty() && !ItemStack.isSameItemSameComponents(pool.prototype, stack))
+        if (!pool.accepts(stack))
             return InteractionResult.FAIL;
 
         int moved = insert(drawer, pool, stack);
@@ -167,7 +193,7 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
     private static int insert (BlockEntityLinkedDrawer drawer, LinkedItemChannels.Pool pool, ItemStack stack) {
         if (stack.isEmpty())
             return 0;
-        if (!pool.isEmpty() && !ItemStack.isSameItemSameComponents(pool.prototype, stack))
+        if (!pool.accepts(stack))
             return 0;
 
         long space = drawer.capacityItems(stack) - pool.count;
@@ -175,7 +201,7 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
         if (moved <= 0)
             return 0;
 
-        if (pool.isEmpty())
+        if (!pool.hasItem())
             pool.set(stack, moved);
         else
             pool.count += moved;

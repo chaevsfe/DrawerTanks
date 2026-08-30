@@ -49,7 +49,7 @@ public class BlockEntityLinkedTank extends BlockEntityTank
     }
 
     public boolean setChannelDye (int strip, DyeColor color) {
-        if (strip < 0 || strip >= STRIPS || channels[strip] == color)
+        if (strip < 0 || strip >= STRIPS || channels[strip] == color || isChannelLocked())
             return false;
 
         channels[strip] = color;
@@ -60,6 +60,9 @@ public class BlockEntityLinkedTank extends BlockEntityTank
     }
 
     public boolean clearChannels () {
+        if (isChannelLocked())
+            return false;
+
         boolean any = false;
         for (int i = 0; i < STRIPS; i++) {
             any |= channels[i] != DyeColor.WHITE;
@@ -72,6 +75,10 @@ public class BlockEntityLinkedTank extends BlockEntityTank
         Bridges.INVALIDATE_CAPS.accept(this);
         onContentsChanged();
         return true;
+    }
+
+    public boolean isChannelLocked () {
+        return isFluidLocked();
     }
 
     public LinkedChannels.Pool pool () {

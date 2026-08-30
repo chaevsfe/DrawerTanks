@@ -39,7 +39,7 @@ public class LinkedDrawerItemStorage extends SnapshotParticipant<LinkedDrawerIte
             return 0;
 
         ItemStack incoming = resource.toStack(1);
-        if (!pool.isEmpty() && !ItemStack.isSameItemSameComponents(pool.prototype, incoming))
+        if (!pool.accepts(incoming))
             return 0;
 
         long space = Math.max(0, pool.capacityFor(incoming) - pool.count);
@@ -48,7 +48,7 @@ public class LinkedDrawerItemStorage extends SnapshotParticipant<LinkedDrawerIte
             return 0;
 
         updateSnapshots(transaction);
-        if (pool.isEmpty())
+        if (!pool.hasItem())
             pool.set(incoming, accepted);
         else
             pool.count += accepted;

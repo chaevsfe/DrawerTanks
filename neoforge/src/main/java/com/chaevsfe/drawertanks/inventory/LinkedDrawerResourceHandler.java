@@ -74,7 +74,7 @@ public class LinkedDrawerResourceHandler implements ResourceHandler<ItemResource
         if (resource.isEmpty())
             return false;
 
-        return pool.isEmpty() || ItemStack.isSameItemSameComponents(pool.prototype, resource.toStack(1));
+        return pool.accepts(resource.toStack(1));
     }
 
     @Override
@@ -83,7 +83,7 @@ public class LinkedDrawerResourceHandler implements ResourceHandler<ItemResource
             return 0;
 
         ItemStack incoming = resource.toStack(1);
-        if (!pool.isEmpty() && !ItemStack.isSameItemSameComponents(pool.prototype, incoming))
+        if (!pool.accepts(incoming))
             return 0;
 
         long space = Math.max(0, pool.capacityFor(incoming) - pool.count);
@@ -93,7 +93,7 @@ public class LinkedDrawerResourceHandler implements ResourceHandler<ItemResource
 
         journal.updateSnapshots(transaction);
         commitJournal.updateSnapshots(transaction);
-        if (pool.isEmpty())
+        if (!pool.hasItem())
             pool.set(incoming, accepted);
         else
             pool.count += accepted;

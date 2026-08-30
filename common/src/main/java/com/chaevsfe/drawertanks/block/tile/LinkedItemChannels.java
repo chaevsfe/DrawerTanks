@@ -42,6 +42,9 @@ public class LinkedItemChannels extends SavedData
         {
             @Override
             protected void onAttributeChanged () {
+                retainItem = isItemLocked(com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute.LOCK_EMPTY);
+                if (!retainItem && count <= 0)
+                    prototype = ItemStack.EMPTY;
                 changed();
             }
         }
@@ -76,13 +79,24 @@ public class LinkedItemChannels extends SavedData
             }
         }
 
+        // a locked channel keeps its item type at zero so nothing else can be pumped in
+        public boolean retainItem;
+
         public boolean isEmpty () {
             return prototype.isEmpty() || count <= 0;
         }
 
+        public boolean hasItem () {
+            return !prototype.isEmpty();
+        }
+
+        public boolean accepts (ItemStack stack) {
+            return !hasItem() || ItemStack.isSameItemSameComponents(prototype, stack);
+        }
+
         // worth persisting if it holds items or upgrades
         public boolean isBlank () {
-            if (!isEmpty())
+            if (hasItem())
                 return false;
 
             for (int i = 0; i < upgrades.getSlotCount(); i++) {
@@ -115,12 +129,10 @@ public class LinkedItemChannels extends SavedData
         }
 
         public void set (ItemStack prototype, long count) {
-            this.prototype = prototype.copyWithCount(1);
-            this.count = count;
-            if (this.count <= 0) {
+            this.prototype = prototype.isEmpty() ? ItemStack.EMPTY : prototype.copyWithCount(1);
+            this.count = Math.max(0, count);
+            if (this.count <= 0 && !retainItem)
                 this.prototype = ItemStack.EMPTY;
-                this.count = 0;
-            }
         }
     }
 

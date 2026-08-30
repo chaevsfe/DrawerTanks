@@ -97,5 +97,6 @@ public class DrawerTanksFabric implements ModInitializer
         capability.register(ModBlockEntities.TANK.get(), be -> be.getDrawerAttributes());
         capability.register(ModBlockEntities.LINKED_TANK.get(), be -> be.getDrawerAttributes());
         capability.register(ModBlockEntities.FRAMED_TANK.get(), be -> be.getDrawerAttributes());
+        capability.register(ModBlockEntities.LINKED_DRAWER.get(), be -> be.getDrawerAttributes());
     }
 }

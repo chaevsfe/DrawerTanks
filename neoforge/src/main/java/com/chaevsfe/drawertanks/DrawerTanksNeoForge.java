@@ -106,6 +106,9 @@ public class DrawerTanksNeoForge
         DrawerTanksNeoForge.<IDrawerAttributes, Object>cast(com.jaquadro.minecraft.storagedrawers.capabilities.Capabilities.DRAWER_ATTRIBUTES)
             .register(event, ModBlockEntities.FRAMED_TANK.get(), (e, c) -> e.getDrawerAttributes());
 
+        DrawerTanksNeoForge.<IDrawerAttributes, Object>cast(com.jaquadro.minecraft.storagedrawers.capabilities.Capabilities.DRAWER_ATTRIBUTES)
+            .register(event, ModBlockEntities.LINKED_DRAWER.get(), (e, c) -> e.getDrawerAttributes());
+
         event.registerBlockEntity(Capabilities.Item.BLOCK, ModBlockEntities.LINKED_DRAWER.get(),
             (be, side) -> com.chaevsfe.drawertanks.inventory.LinkedDrawerResourceHandler.of(be));
     }

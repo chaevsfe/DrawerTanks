@@ -11,6 +11,7 @@ public class LinkedDrawerRenderState extends BlockEntityRenderState
     public ItemStackRenderState itemState;
     public String countText;
     public TextureAtlasSprite[] channelSprites;
+    public TextureAtlasSprite lockSprite;
 
     public LinkedDrawerRenderState () { }
 }
