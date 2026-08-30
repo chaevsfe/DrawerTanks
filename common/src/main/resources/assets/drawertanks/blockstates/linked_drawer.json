@@ -1,0 +1,19 @@
+{
+    "variants": {
+        "facing=north": {
+            "model": "drawertanks:block/linked_drawer"
+        },
+        "facing=east": {
+            "model": "drawertanks:block/linked_drawer",
+            "y": 90
+        },
+        "facing=south": {
+            "model": "drawertanks:block/linked_drawer",
+            "y": 180
+        },
+        "facing=west": {
+            "model": "drawertanks:block/linked_drawer",
+            "y": 270
+        }
+    }
+}

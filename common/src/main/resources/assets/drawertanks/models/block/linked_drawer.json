@@ -1,0 +1,85 @@
+{
+    "parent": "block/block",
+    "textures": {
+        "particle": "drawertanks:block/linked_tank_side",
+        "side": "drawertanks:block/linked_tank_side",
+        "top": "drawertanks:block/linked_tank_top",
+        "front": "drawertanks:block/linked_drawer_front"
+    },
+    "elements": [
+        {
+            "from": [
+                0,
+                0,
+                0
+            ],
+            "to": [
+                16,
+                16,
+                16
+            ],
+            "faces": {
+                "north": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        16
+                    ],
+                    "texture": "#front",
+                    "cullface": "north"
+                },
+                "south": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        16
+                    ],
+                    "texture": "#side",
+                    "cullface": "south"
+                },
+                "east": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        16
+                    ],
+                    "texture": "#side",
+                    "cullface": "east"
+                },
+                "west": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        16
+                    ],
+                    "texture": "#side",
+                    "cullface": "west"
+                },
+                "up": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        16
+                    ],
+                    "texture": "#top",
+                    "cullface": "up"
+                },
+                "down": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        16
+                    ],
+                    "texture": "#top",
+                    "cullface": "down"
+                }
+            }
+        }
+    ]
+}

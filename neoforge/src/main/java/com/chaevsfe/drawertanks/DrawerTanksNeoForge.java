@@ -60,6 +60,16 @@ public class DrawerTanksNeoForge
         modEventBus.addListener(this::registerCapabilities);
         modEventBus.addListener(this::buildCreativeTabs);
 
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(
+            (net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock event) -> {
+                if (event.getLevel().getBlockState(event.getPos()).getBlock() instanceof com.chaevsfe.drawertanks.block.BlockLinkedDrawer block) {
+                    event.setCanceled(true);
+                    if (!event.getLevel().isClientSide()
+                        && event.getAction() == net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock.Action.START)
+                        block.takeItem(event.getLevel(), event.getPos(), event.getEntity(), event.getEntity().isShiftKeyDown());
+                }
+            });
+
         Bridges.FLUID = new FluidBridge()
         {
             @Override
@@ -87,6 +97,9 @@ public class DrawerTanksNeoForge
             .register(event, ModBlockEntities.LINKED_TANK.get(), (e, c) -> e.getDrawerAttributes());
         DrawerTanksNeoForge.<IDrawerAttributes, Object>cast(com.jaquadro.minecraft.storagedrawers.capabilities.Capabilities.DRAWER_ATTRIBUTES)
             .register(event, ModBlockEntities.FRAMED_TANK.get(), (e, c) -> e.getDrawerAttributes());
+
+        event.registerBlockEntity(Capabilities.Item.BLOCK, ModBlockEntities.LINKED_DRAWER.get(),
+            (be, side) -> com.chaevsfe.drawertanks.inventory.LinkedDrawerResourceHandler.of(be));
     }
 
     @SuppressWarnings("unchecked")

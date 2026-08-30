@@ -2,6 +2,7 @@ package com.chaevsfe.drawertanks.core;
 
 import com.chaevsfe.drawertanks.ModConstants;
 import com.chaevsfe.drawertanks.block.tile.BlockEntityFramedTank;
+import com.chaevsfe.drawertanks.block.tile.BlockEntityLinkedDrawer;
 import com.chaevsfe.drawertanks.block.tile.BlockEntityLinkedTank;
 import com.chaevsfe.drawertanks.block.tile.BlockEntityTank;
 import com.chaevsfe.drawertanks.platform.Bridges;
@@ -28,6 +29,9 @@ public final class ModBlockEntities
 
     public static final RegistryEntry<BlockEntityType<BlockEntityFramedTank>> FRAMED_TANK = BLOCK_ENTITIES.register("framed_tank", () ->
         new BlockEntityType<>(Bridges.FRAMED_TANK_FACTORY, Set.of(ModBlocks.FRAMED_TANK.get())));
+
+    public static final RegistryEntry<BlockEntityType<BlockEntityLinkedDrawer>> LINKED_DRAWER = BLOCK_ENTITIES.register("linked_drawer", () ->
+        new BlockEntityType<>(BlockEntityLinkedDrawer::new, Set.of(ModBlocks.LINKED_DRAWER.get())));
 
     private ModBlockEntities () { }
 

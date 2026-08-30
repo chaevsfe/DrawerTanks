@@ -174,6 +174,41 @@ def make_linked_front(side_img):
     return img
 
 
+def make_linked_drawer_front(side_img, sd_res):
+    img = make_linked_side(side_img)
+    handle_path = os.path.join(sd_res, "assets/storagedrawers/textures/block/overlay/handle_1.png")
+    if os.path.exists(handle_path):
+        handle = Image.open(handle_path).convert("RGBA")
+        img = Image.alpha_composite(img, handle)
+    return img
+
+
+def linked_drawer_model():
+    side = "drawertanks:block/linked_tank_side"
+    return {
+        "parent": "block/block",
+        "textures": {
+            "particle": side,
+            "side": side,
+            "top": "drawertanks:block/linked_tank_top",
+            "front": "drawertanks:block/linked_drawer_front"
+        },
+        "elements": [
+            {
+                "from": [0, 0, 0], "to": [16, 16, 16],
+                "faces": {
+                    "north": {"uv": [0, 0, 16, 16], "texture": "#front", "cullface": "north"},
+                    "south": {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "south"},
+                    "east": {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "east"},
+                    "west": {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "west"},
+                    "up": {"uv": [0, 0, 16, 16], "texture": "#top", "cullface": "up"},
+                    "down": {"uv": [0, 0, 16, 16], "texture": "#top", "cullface": "down"}
+                }
+            }
+        ]
+    }
+
+
 def make_gui(sd_res):
     img = Image.open(os.path.join(sd_res, "assets/storagedrawers/textures/gui/drawers_1.png")).convert("RGBA")
     px = img.load()
@@ -477,6 +512,29 @@ def main():
     write_json(os.path.join(a, "blockstates/meta_tank_trim.json"),
                {"variants": {"": {"model": "drawertanks:block/framed/tank_trim"}}})
 
+    make_linked_drawer_front(dark_side, sd_res).save(os.path.join(a, "textures/block/linked_drawer_front.png"))
+    write_json(os.path.join(a, "models/block/linked_drawer.json"), linked_drawer_model())
+    write_json(os.path.join(a, "blockstates/linked_drawer.json"), facing_blockstate("drawertanks:block/linked_drawer"))
+    write_json(os.path.join(a, "items/linked_drawer.json"),
+               {"model": {"type": "minecraft:model", "model": "drawertanks:block/linked_drawer"}})
+    write_json(os.path.join(d, "recipe/linked_drawer.json"), {
+        "type": "minecraft:crafting_shaped",
+        "pattern": ["OEO", "EDE", "OEO"],
+        "key": {"O": "minecraft:obsidian", "E": "minecraft:ender_eye", "D": "#storagedrawers:drawers"},
+        "result": {"id": "drawertanks:linked_drawer", "count": 1}
+    })
+    write_json(os.path.join(d, "loot_table/blocks/linked_drawer.json"), {
+        "type": "minecraft:block",
+        "pools": [{
+            "bonus_rolls": 0.0,
+            "conditions": [{"condition": "minecraft:survives_explosion"}],
+            "entries": [{"type": "minecraft:item", "name": "drawertanks:linked_drawer"}],
+            "rolls": 1.0
+        }],
+        "random_sequence": "minecraft:blocks/linked_drawer"
+    })
+    lang["block.drawertanks.linked_drawer"] = "Linked Drawer"
+
     lang["block.drawertanks.framed_tank"] = "Framed Tank"
     lang["block.drawertanks.meta_tank_side"] = "Tank Side"
     lang["block.drawertanks.meta_tank_trim"] = "Tank Trim"
@@ -490,7 +548,7 @@ def main():
     write_json(os.path.join(a, "lang/en_us.json"), dict(sorted(lang.items())))
 
     write_json(os.path.join(dt_res, "data/minecraft/tags/block/mineable/axe.json"),
-               {"replace": False, "values": [f"drawertanks:{w}_tank" for w in WOODS] + ["drawertanks:linked_tank"]})
+               {"replace": False, "values": [f"drawertanks:{w}_tank" for w in WOODS] + ["drawertanks:linked_tank", "drawertanks:linked_drawer", "drawertanks:framed_tank"]})
 
     print(f"generated assets for {len(WOODS)} woods + linked tank")
 

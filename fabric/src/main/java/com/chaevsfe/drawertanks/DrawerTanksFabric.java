@@ -1,7 +1,9 @@
 package com.chaevsfe.drawertanks;
 
+import com.chaevsfe.drawertanks.block.BlockLinkedDrawer;
 import com.chaevsfe.drawertanks.block.tile.BlockEntityTank;
 import com.chaevsfe.drawertanks.config.FabricTankConfig;
+import com.chaevsfe.drawertanks.inventory.LinkedDrawerItemStorage;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
 import com.chaevsfe.drawertanks.core.ModBlocks;
 import com.chaevsfe.drawertanks.core.ModContainers;
@@ -16,13 +18,16 @@ import com.jaquadro.minecraft.storagedrawers.capabilities.Capabilities;
 import com.texelsaurus.minecraft.chameleon.api.ChameleonInit;
 import com.texelsaurus.minecraft.chameleon.capabilities.IFabricCapability;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -47,6 +52,16 @@ public class DrawerTanksFabric implements ModInitializer
         FluidStorage.SIDED.registerForBlockEntity((be, dir) -> TankFluidStorage.of(be), ModBlockEntities.TANK.get());
         FluidStorage.SIDED.registerForBlockEntity((be, dir) -> TankFluidStorage.of(be), ModBlockEntities.LINKED_TANK.get());
         FluidStorage.SIDED.registerForBlockEntity((be, dir) -> TankFluidStorage.of(be), ModBlockEntities.FRAMED_TANK.get());
+        ItemStorage.SIDED.registerForBlockEntity((be, dir) -> LinkedDrawerItemStorage.of(be), ModBlockEntities.LINKED_DRAWER.get());
+
+        AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
+            if (world.getBlockState(pos).getBlock() instanceof BlockLinkedDrawer block) {
+                if (!world.isClientSide())
+                    block.takeItem(world, pos, player, player.isShiftKeyDown());
+                return InteractionResult.SUCCESS;
+            }
+            return InteractionResult.PASS;
+        });
 
         IFabricCapability<IDrawerAttributes> attributesCapability = (IFabricCapability<IDrawerAttributes>) Capabilities.DRAWER_ATTRIBUTES;
         attributesCapability.register(ModBlockEntities.TANK.get(), be -> be.getDrawerAttributes());

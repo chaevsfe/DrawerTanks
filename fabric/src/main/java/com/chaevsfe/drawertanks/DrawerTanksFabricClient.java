@@ -1,6 +1,7 @@
 package com.chaevsfe.drawertanks;
 
 import com.chaevsfe.drawertanks.client.model.TankModelPlugin;
+import com.chaevsfe.drawertanks.client.renderer.BlockEntityLinkedDrawerRenderer;
 import com.chaevsfe.drawertanks.client.renderer.BlockEntityTankRenderer;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
 import com.chaevsfe.drawertanks.core.ModContainers;
@@ -25,6 +26,7 @@ public class DrawerTanksFabricClient implements ClientModInitializer
         BlockEntityRenderers.register(ModBlockEntities.TANK.get(), BlockEntityTankRenderer::new);
         BlockEntityRenderers.register(ModBlockEntities.LINKED_TANK.get(), BlockEntityTankRenderer::new);
         BlockEntityRenderers.register(ModBlockEntities.FRAMED_TANK.get(), BlockEntityTankRenderer::new);
+        BlockEntityRenderers.register(ModBlockEntities.LINKED_DRAWER.get(), BlockEntityLinkedDrawerRenderer::new);
 
         MenuScreens.register(ModContainers.TANK_CONTAINER.get(), TankScreen::new);
 

@@ -36,6 +36,8 @@ public class ClientModBusSubscriber
     public static void registerEntityRenderers (EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(ModBlockEntities.TANK.get(), BlockEntityTankRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.LINKED_TANK.get(), BlockEntityTankRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.FRAMED_TANK.get(), BlockEntityTankRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.LINKED_DRAWER.get(), com.chaevsfe.drawertanks.client.renderer.BlockEntityLinkedDrawerRenderer::new);
     }
 
     @SubscribeEvent

@@ -2,6 +2,7 @@ package com.chaevsfe.drawertanks.core;
 
 import com.chaevsfe.drawertanks.ModConstants;
 import com.chaevsfe.drawertanks.block.BlockFramedTank;
+import com.chaevsfe.drawertanks.block.BlockLinkedDrawer;
 import com.chaevsfe.drawertanks.block.BlockLinkedTank;
 import com.chaevsfe.drawertanks.block.BlockTank;
 import com.jaquadro.minecraft.storagedrawers.block.meta.BlockMeta;
@@ -43,6 +44,13 @@ public final class ModBlocks
             .strength(10f, 600f)
             .sound(SoundType.WOOD)
             .setId(ResourceKey.create(Registries.BLOCK, ModConstants.loc("linked_tank")))));
+
+    public static final RegistryEntry<BlockLinkedDrawer> LINKED_DRAWER = BLOCKS.register("linked_drawer",
+        () -> new BlockLinkedDrawer(Properties.of()
+            .mapColor(MapColor.COLOR_BLACK)
+            .strength(10f, 600f)
+            .sound(SoundType.WOOD)
+            .setId(ResourceKey.create(Registries.BLOCK, ModConstants.loc("linked_drawer")))));
 
     public static final List<String> EXCLUDE_ITEMS = new ArrayList<>();
 
