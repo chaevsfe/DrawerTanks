@@ -13,8 +13,10 @@ import net.minecraft.world.level.storage.ValueOutput;
 
 public class BlockEntityLinkedTank extends BlockEntityTank
 {
-    // 1 bucket per second, moved only while both ends' chunks are loaded
-    public static final long TRANSFER_PER_TICK = DROPLETS_PER_BUCKET / 20;
+    // default 1 bucket per second, moved only while both ends' chunks are loaded
+    private static long transferPerTick () {
+        return com.chaevsfe.drawertanks.config.TankConfig.linkedTransferMbPerTick * DROPLETS_PER_MB;
+    }
 
     private GlobalPos partner;
 
@@ -58,7 +60,7 @@ public class BlockEntityLinkedTank extends BlockEntityTank
             return;
 
         long space = Math.max(0, capacityDroplets() - to.getAmount());
-        long moved = Math.min(TRANSFER_PER_TICK, Math.min(from.getAmount(), space));
+        long moved = Math.min(transferPerTick(), Math.min(from.getAmount(), space));
         if (moved <= 0)
             return;
 

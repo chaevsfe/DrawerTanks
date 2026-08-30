@@ -11,6 +11,9 @@ dependencies {
     implementation("net.fabricmc.fabric-api:fabric-api:${Versions.fabric}")
 
     compileOnly(Versions.sdModrinthFabric)
+    compileOnly("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:26.2.1") {
+        exclude(group = "net.fabricmc.fabric-api")
+    }
     "localOnlyRuntime"(Versions.sdModrinthFabric)
     "localOnlyRuntime"("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:26.2.1") {
         exclude(group = "net.fabricmc.fabric-api")

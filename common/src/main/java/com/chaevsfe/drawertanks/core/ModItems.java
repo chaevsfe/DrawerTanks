@@ -1,6 +1,8 @@
 package com.chaevsfe.drawertanks.core;
 
 import com.chaevsfe.drawertanks.ModConstants;
+import com.chaevsfe.drawertanks.block.BlockTank;
+import com.chaevsfe.drawertanks.item.ItemTank;
 import com.chaevsfe.drawertanks.item.ItemTankCoupler;
 import com.texelsaurus.minecraft.chameleon.ChameleonServices;
 import com.texelsaurus.minecraft.chameleon.api.ChameleonInit;
@@ -34,10 +36,13 @@ public final class ModItems
 
     private static void registerBlock (RegistryEntry<? extends Block> blockHolder) {
         ITEMS.register(blockHolder.getId().getPath(), () -> {
+            Block block = blockHolder.get();
             Item.Properties itemProperties = new Item.Properties()
                 .useBlockDescriptionPrefix()
                 .setId(modKey(blockHolder.getId()));
-            return new BlockItem(blockHolder.get(), itemProperties);
+            if (block instanceof BlockTank)
+                return new ItemTank(block, itemProperties);
+            return new BlockItem(block, itemProperties);
         });
     }
 

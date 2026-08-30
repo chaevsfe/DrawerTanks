@@ -1,5 +1,6 @@
 package com.chaevsfe.drawertanks;
 
+import com.chaevsfe.drawertanks.config.NeoforgeTankConfig;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
 import com.chaevsfe.drawertanks.core.ModBlocks;
 import com.chaevsfe.drawertanks.core.ModContainers;
@@ -22,6 +23,8 @@ import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
@@ -35,6 +38,12 @@ public class DrawerTanksNeoForge
         Identifier.fromNamespaceAndPath("storagedrawers", "storagedrawers"));
 
     public DrawerTanksNeoForge (ModContainer modContainer, IEventBus modEventBus) {
+        modContainer.registerConfig(ModConfig.Type.COMMON, NeoforgeTankConfig.SPEC, "drawertanks-common.toml");
+        modEventBus.addListener((ModConfigEvent event) -> {
+            if (event.getConfig().getSpec() == NeoforgeTankConfig.SPEC)
+                NeoforgeTankConfig.apply();
+        });
+
         NeoforgeRegistryContext context = new NeoforgeRegistryContext(modEventBus);
 
         ModBlocks.init(context);

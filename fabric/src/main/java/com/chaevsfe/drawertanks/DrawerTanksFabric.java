@@ -1,6 +1,7 @@
 package com.chaevsfe.drawertanks;
 
 import com.chaevsfe.drawertanks.block.tile.BlockEntityTank;
+import com.chaevsfe.drawertanks.config.FabricTankConfig;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
 import com.chaevsfe.drawertanks.core.ModBlocks;
 import com.chaevsfe.drawertanks.core.ModContainers;
@@ -13,6 +14,7 @@ import com.chaevsfe.drawertanks.platform.FluidBridge;
 import com.texelsaurus.minecraft.chameleon.api.ChameleonInit;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext;
+import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil;
 import net.minecraft.core.BlockPos;
@@ -26,6 +28,9 @@ public class DrawerTanksFabric implements ModInitializer
 {
     @Override
     public void onInitialize () {
+        if (FabricLoader.getInstance().isModLoaded("forgeconfigapiport"))
+            FabricTankConfig.init();
+
         ChameleonInit.InitContext context = new ChameleonInit.InitContext();
 
         ModBlocks.init(context);

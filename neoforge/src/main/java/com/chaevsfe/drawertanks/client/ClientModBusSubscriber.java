@@ -10,6 +10,7 @@ import com.chaevsfe.drawertanks.platform.ClientFluidBridge;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.FluidModel;
 import net.minecraft.core.component.DataComponentPatch;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -48,6 +49,11 @@ public class ClientModBusSubscriber
             @Override
             public int luminance (Fluid fluid, DataComponentPatch components) {
                 return fluid.getFluidType().getLightLevel();
+            }
+
+            @Override
+            public Component fluidName (Fluid fluid, DataComponentPatch components) {
+                return FluidResource.of(fluid, components).getHoverName();
             }
         };
     }

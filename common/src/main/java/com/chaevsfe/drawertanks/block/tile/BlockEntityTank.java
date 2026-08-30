@@ -5,6 +5,7 @@ import com.chaevsfe.drawertanks.components.TankContents;
 import com.chaevsfe.drawertanks.components.TankUpgrades;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
 import com.chaevsfe.drawertanks.core.ModDataComponents;
+import com.chaevsfe.drawertanks.config.TankConfig;
 import com.chaevsfe.drawertanks.inventory.ContainerTank;
 import com.jaquadro.minecraft.storagedrawers.block.tile.BaseBlockEntity;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.UpgradeData;
@@ -33,7 +34,6 @@ import java.util.List;
 
 public class BlockEntityTank extends BaseBlockEntity
 {
-    public static final int BASE_CAPACITY_BUCKETS = 8;
     public static final long DROPLETS_PER_BUCKET = 81000L;
     public static final long DROPLETS_PER_MB = 81L;
     public static final int UPGRADE_SLOTS = 7;
@@ -78,7 +78,7 @@ public class BlockEntityTank extends BaseBlockEntity
         if (attributes.isUnlimitedStorage() || attributes.isUnlimitedVending())
             return Long.MAX_VALUE / 4;
 
-        long buckets = (long) BASE_CAPACITY_BUCKETS * upgradeData.getStorageMultiplier();
+        long buckets = (long) TankConfig.baseCapacityBuckets * upgradeData.getStorageMultiplier();
         if (upgradeData.hasOneStackUpgrade())
             buckets = 1;
 
@@ -122,15 +122,21 @@ public class BlockEntityTank extends BaseBlockEntity
     }
 
     public long capacityDropletsWithout (int slot) {
+        List<ItemStack> remaining = new ArrayList<>();
+        for (int i = 0; i < upgradeData.getSlotCount(); i++) {
+            if (i != slot)
+                remaining.add(upgradeData.getUpgrade(i));
+        }
+        return computeCapacityDroplets(remaining);
+    }
+
+    public static long computeCapacityDroplets (Iterable<ItemStack> upgrades) {
         boolean unlimited = false;
         boolean oneStack = false;
         int multiplier = 0;
 
-        for (int i = 0; i < upgradeData.getSlotCount(); i++) {
-            if (i == slot)
-                continue;
-
-            Item item = upgradeData.getUpgrade(i).getItem();
+        for (ItemStack upgrade : upgrades) {
+            Item item = upgrade.getItem();
             if (item instanceof ItemUpgradeStorage storage)
                 multiplier += ModCommonConfig.INSTANCE.UPGRADES.getLevelMult(storage.level.getLevel());
             else if (item == com.jaquadro.minecraft.storagedrawers.core.ModItems.CREATIVE_STORAGE_UPGRADE.get()
@@ -145,7 +151,7 @@ public class BlockEntityTank extends BaseBlockEntity
         if (multiplier == 0)
             multiplier = ModCommonConfig.INSTANCE.UPGRADES.getLevelMult(0);
 
-        long buckets = oneStack ? 1 : (long) BASE_CAPACITY_BUCKETS * multiplier;
+        long buckets = oneStack ? 1 : (long) TankConfig.baseCapacityBuckets * multiplier;
         return buckets * DROPLETS_PER_BUCKET;
     }
 

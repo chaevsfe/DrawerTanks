@@ -13,6 +13,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.core.component.DataComponentPatch;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.material.Fluid;
 
 public class DrawerTanksFabricClient implements ClientModInitializer
@@ -34,6 +35,11 @@ public class DrawerTanksFabricClient implements ClientModInitializer
             @Override
             public int luminance (Fluid fluid, DataComponentPatch components) {
                 return FluidVariantAttributes.getLuminance(FluidVariant.of(fluid, components));
+            }
+
+            @Override
+            public Component fluidName (Fluid fluid, DataComponentPatch components) {
+                return FluidVariantAttributes.getName(FluidVariant.of(fluid, components));
             }
         };
     }
