@@ -162,6 +162,7 @@ public class BlockEntityLinkedTank extends BlockEntityTank
                 TankData mirror = tank.clientMirror();
                 mirror.setFluid(pool.data.getFluid(), pool.data.getComponents());
                 mirror.setAmount(pool.data.getAmount());
+                tank.mirrorUpgrades(pool.upgrades);
                 tank.superOnContentsChanged();
                 tank.lastSeenVersion = pool.version;
             }

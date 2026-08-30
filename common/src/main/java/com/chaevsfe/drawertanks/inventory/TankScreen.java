@@ -23,6 +23,8 @@ public class TankScreen extends AbstractContainerScreen<ContainerTank>
     private static final int GAUGE_X = 80;
     private static final int GAUGE_Y = 18;
     private static final int GAUGE_W = 16;
+    // right edge of the label area minus the gauge, so text can never sit on top of the gauge
+    private static final int LABEL_MAX_WIDTH = 168 - (GAUGE_X + GAUGE_W + 3);
     private static final int GAUGE_H = 56;
 
     private final Inventory inventory;
@@ -101,22 +103,41 @@ public class TankScreen extends AbstractContainerScreen<ContainerTank>
         graphics.text(this.font, this.inventory.getDisplayName().getString(), 8, this.imageHeight - 96 + 2, 0xFF404040, false);
 
         BlockEntityTank tank = menu.getTank();
-        if (tank != null) {
-            String label = amountLabel(tank);
-            graphics.text(this.font, label, 168 - this.font.width(label), 42, 0xFF404040, false);
+        if (tank == null)
+            return;
+
+        long capacity = tank.capacityDroplets();
+        if (tank.tankData().isEmpty() && capacity <= 0)
+            return;
+
+        String held = compact(tank.tankData().getAmount() / (double) BlockEntityTank.DROPLETS_PER_BUCKET);
+        if (BlockEntityTank.isUnlimitedCapacity(capacity)) {
+            drawRight(graphics, held + " B", 42);
+            return;
+        }
+
+        String cap = compact(capacity / (double) BlockEntityTank.DROPLETS_PER_BUCKET);
+        String single = held + " / " + cap + " B";
+        // a channel with storage upgrades runs to five figures, which would print over the gauge
+        if (this.font.width(single) <= LABEL_MAX_WIDTH) {
+            drawRight(graphics, single, 42);
+        } else {
+            drawRight(graphics, held, 36);
+            drawRight(graphics, "/ " + cap + " B", 46);
         }
     }
 
-    private static String amountLabel (BlockEntityTank tank) {
-        long capacity = tank.capacityDroplets();
-        if (tank.tankData().isEmpty() && capacity <= 0)
-            return "";
+    private void drawRight (GuiGraphicsExtractor graphics, String text, int y) {
+        int x = Math.max(GAUGE_X + GAUGE_W + 3, 168 - this.font.width(text));
+        graphics.text(this.font, text, x, y, 0xFF404040, false);
+    }
 
-        String held = trimmed(tank.tankData().getAmount() / (double) BlockEntityTank.DROPLETS_PER_BUCKET);
-        if (BlockEntityTank.isUnlimitedCapacity(capacity))
-            return held + " B";
-
-        return held + " / " + (capacity / BlockEntityTank.DROPLETS_PER_BUCKET) + " B";
+    private static String compact (double buckets) {
+        if (buckets >= 1_000_000)
+            return trimmed(buckets / 1_000_000) + "M";
+        if (buckets >= 10_000)
+            return trimmed(buckets / 1000) + "k";
+        return trimmed(buckets);
     }
 
     private static String trimmed (double buckets) {

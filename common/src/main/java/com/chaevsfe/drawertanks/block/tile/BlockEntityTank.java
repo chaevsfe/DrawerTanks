@@ -157,6 +157,13 @@ public class BlockEntityTank extends BaseBlockEntity
         return target;
     }
 
+    // A linked tank's real upgrades live on its channel, but the block's own list is what gets
+    // written into the update packet, so keep it as a mirror or the client sees empty slots.
+    protected void mirrorUpgrades (UpgradeData source) {
+        for (int i = 0; i < upgradeData.getSlotCount(); i++)
+            upgradeData.forceSetUpgrade(i, i < source.getSlotCount() ? source.getUpgrade(i) : ItemStack.EMPTY);
+    }
+
     // linked tanks redirect this at the shared pool; the local field is only right for a plain tank
     protected void onFluidLockChanged (boolean locked) {
         tankData.setRetainFluid(locked);
