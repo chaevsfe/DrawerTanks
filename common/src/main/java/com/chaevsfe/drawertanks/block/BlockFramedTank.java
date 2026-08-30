@@ -99,7 +99,7 @@ public class BlockFramedTank extends BlockTank implements IFramedBlock
 
     @Override
     public boolean supportsFrameMaterial (FrameMaterial material) {
-        return material == FrameMaterial.SIDE;
+        return material == FrameMaterial.SIDE || material == FrameMaterial.TRIM;
     }
 
     @Override

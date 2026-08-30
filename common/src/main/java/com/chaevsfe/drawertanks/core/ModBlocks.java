@@ -55,10 +55,17 @@ public final class ModBlocks
             .setId(ResourceKey.create(Registries.BLOCK, ModConstants.loc("framed_tank")))));
 
     public static final RegistryEntry<BlockMeta> META_TANK_SIDE = registerMetaFacingBlock("meta_tank_side");
+    public static final RegistryEntry<BlockMeta> META_TANK_TRIM = registerMetaBlock("meta_tank_trim");
 
     private static RegistryEntry<BlockMeta> registerMetaFacingBlock (String name) {
         EXCLUDE_ITEMS.add(name);
         return BLOCKS.register(name, () -> new BlockMetaFacing(Properties.of().air()
+            .setId(ResourceKey.create(Registries.BLOCK, ModConstants.loc(name)))));
+    }
+
+    private static RegistryEntry<BlockMeta> registerMetaBlock (String name) {
+        EXCLUDE_ITEMS.add(name);
+        return BLOCKS.register(name, () -> new BlockMeta(Properties.of().air()
             .setId(ResourceKey.create(Registries.BLOCK, ModConstants.loc(name)))));
     }
 

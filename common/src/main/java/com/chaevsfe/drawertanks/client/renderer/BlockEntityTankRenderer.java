@@ -188,27 +188,30 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
                 float dv = sprite.getV1() - v0;
                 float ua = u0 + du * (1 + i * 3) / 16f;
                 float ub = u0 + du * (3 + i * 3) / 16f;
+                float uzA = u0 + du * 3 / 16f;
+                float uzB = u0 + du * 13 / 16f;
                 float va = v0 + dv * 3 / 16f;
                 float vb = v0 + dv * 13 / 16f;
-                float vSide = v0 + dv / 16f;
+                float vTop = v0;
+                float vBot = v0 + dv / 16f;
 
                 // top
-                quad(matrix, pose, vertexConsumer, light, sprite,
+                quad(matrix, pose, vertexConsumer, light,
                     x1, y2, z1, x1, y2, z2, x2, y2, z2, x2, y2, z1, ua, va, ub, vb);
                 // front and back
-                quad(matrix, pose, vertexConsumer, light, sprite,
-                    x1, y1, z2, x1, y2, z2, x2, y2, z2, x2, y1, z2, ua, va, ub, vSide);
-                quad(matrix, pose, vertexConsumer, light, sprite,
-                    x1, y1, z1, x1, y2, z1, x2, y2, z1, x2, y1, z1, ua, va, ub, vSide);
+                quad(matrix, pose, vertexConsumer, light,
+                    x1, y1, z2, x1, y2, z2, x2, y2, z2, x2, y1, z2, ua, vBot, ub, vTop);
+                quad(matrix, pose, vertexConsumer, light,
+                    x1, y1, z1, x1, y2, z1, x2, y2, z1, x2, y1, z1, ua, vBot, ub, vTop);
                 // left and right
-                quad(matrix, pose, vertexConsumer, light, sprite,
-                    x1, y1, z1, x1, y2, z1, x1, y2, z2, x1, y1, z2, va, ua, vb, u0 + du / 16f);
-                quad(matrix, pose, vertexConsumer, light, sprite,
-                    x2, y1, z1, x2, y2, z1, x2, y2, z2, x2, y1, z2, va, ua, vb, u0 + du / 16f);
+                quad(matrix, pose, vertexConsumer, light,
+                    x1, y1, z1, x1, y2, z1, x1, y2, z2, x1, y1, z2, uzA, vBot, uzB, vTop);
+                quad(matrix, pose, vertexConsumer, light,
+                    x2, y1, z1, x2, y2, z1, x2, y2, z2, x2, y1, z2, uzA, vBot, uzB, vTop);
             }
         }
 
-        private static void quad (Matrix4f matrix, PoseStack.Pose pose, VertexConsumer buffer, int light, net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,
+        private static void quad (Matrix4f matrix, PoseStack.Pose pose, VertexConsumer buffer, int light,
                                   float ax, float ay, float az, float bx, float by, float bz,
                                   float cx, float cy, float cz, float dx, float dy, float dz,
                                   float u1, float v1, float u2, float v2) {

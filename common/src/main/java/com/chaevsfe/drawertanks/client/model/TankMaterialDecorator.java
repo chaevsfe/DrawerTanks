@@ -14,9 +14,10 @@ import java.util.function.Supplier;
 
 public class TankMaterialDecorator extends MaterialModelDecorator<FramedModelContext>
 {
-    // the DynamicPart value is only a routing token for getStoreModel; it is never looked up in SD's store
+    // the DynamicPart values are only routing tokens for getStoreModel; they are never looked up in SD's store
     private static final DrawerModelStore.FrameMatSet TANK_MATERIALS = new DrawerModelStore.FrameMatSet()
-        .sidePart(DrawerModelStore.DynamicPart.FRAMED_TRIM_SIDE);
+        .sidePart(DrawerModelStore.DynamicPart.FRAMED_TRIM_SIDE)
+        .trimPart(DrawerModelStore.DynamicPart.FRAMED_TRIM_TRIM);
 
     public TankMaterialDecorator () {
         super(TANK_MATERIALS, false);
@@ -24,6 +25,9 @@ public class TankMaterialDecorator extends MaterialModelDecorator<FramedModelCon
 
     @Override
     protected BlockStateModel getStoreModel (FramedModelContext context, DrawerModelStore.DynamicPart part) {
+        if (part == DrawerModelStore.DynamicPart.FRAMED_TRIM_TRIM)
+            return DrawerModelStore.getModel(ModBlocks.META_TANK_TRIM.get().defaultBlockState());
+
         Direction facing = Direction.NORTH;
         BlockState state = context.state();
         if (state != null && state.hasProperty(BlockStateProperties.HORIZONTAL_FACING))

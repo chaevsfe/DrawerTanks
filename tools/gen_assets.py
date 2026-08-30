@@ -205,28 +205,63 @@ def framed_block_model():
     return model
 
 
-def meta_tank_sides_model():
-    mat = "storagedrawers:block/base/base_oak"
+MAT_TEX = "storagedrawers:block/base/base_oak"
 
-    def cull(face):
-        return {"uv": [0, 0, 16, 16], "texture": "#mat", "cullface": face}
+
+def meta_tank_sides_model():
+    # per-face plates inset one pixel on every edge; the trim part owns the edges
+    def plate(from_, to, face, uv):
+        return {"from": from_, "to": to,
+                "faces": {face: {"uv": uv, "texture": "#mat", "cullface": face}}}
 
     return {
         "render_type": "minecraft:cutout_mipped",
-        "textures": {"particle": mat, "mat": mat},
+        "textures": {"particle": MAT_TEX, "mat": MAT_TEX},
         "elements": [
-            {"from": [0, 0, 0], "to": [16, 16, 16], "faces": {
-                "south": cull("south"), "east": cull("east"), "west": cull("west"),
-                "up": cull("up"), "down": cull("down")}},
-            {"from": [0, 13, 0], "to": [16, 16, 0],
-             "faces": {"north": {"uv": [0, 0, 16, 3], "texture": "#mat", "cullface": "north"}}},
-            {"from": [0, 0, 0], "to": [16, 3, 0],
-             "faces": {"north": {"uv": [0, 13, 16, 16], "texture": "#mat", "cullface": "north"}}},
-            {"from": [0, 3, 0], "to": [3, 13, 0],
-             "faces": {"north": {"uv": [13, 3, 16, 13], "texture": "#mat", "cullface": "north"}}},
-            {"from": [13, 3, 0], "to": [16, 13, 0],
-             "faces": {"north": {"uv": [0, 3, 3, 13], "texture": "#mat", "cullface": "north"}}}
+            plate([1, 1, 16], [15, 15, 16], "south", [1, 1, 15, 15]),
+            plate([16, 1, 1], [16, 15, 15], "east", [1, 1, 15, 15]),
+            plate([0, 1, 1], [0, 15, 15], "west", [1, 1, 15, 15]),
+            plate([1, 16, 1], [15, 16, 15], "up", [1, 1, 15, 15]),
+            plate([1, 0, 1], [15, 0, 15], "down", [1, 1, 15, 15]),
+            plate([1, 13, 0], [15, 15, 0], "north", [1, 1, 15, 3]),
+            plate([1, 1, 0], [15, 3, 0], "north", [1, 13, 15, 15]),
+            plate([1, 3, 0], [3, 13, 0], "north", [13, 3, 15, 13]),
+            plate([13, 3, 0], [15, 13, 0], "north", [1, 3, 3, 13])
         ]
+    }
+
+
+def meta_tank_trim_model():
+    # the twelve one-pixel edges of the cube
+    elements = []
+
+    def bar(from_, to, faces):
+        element = {"from": from_, "to": to, "faces": {}}
+        for face in faces:
+            if face in ("north", "south"):
+                uv = [from_[0], 16 - to[1], to[0], 16 - from_[1]]
+            elif face in ("east", "west"):
+                uv = [from_[2], 16 - to[1], to[2], 16 - from_[1]]
+            else:
+                uv = [from_[0], from_[2], to[0], to[2]]
+            element["faces"][face] = {"uv": uv, "texture": "#mat", "cullface": face}
+        elements.append(element)
+
+    for x in (0, 15):
+        for z in (0, 15):
+            faces = ["west" if x == 0 else "east", "north" if z == 0 else "south", "up", "down"]
+            bar([x, 0, z], [x + 1, 16, z + 1], faces)
+    for y in (0, 15):
+        vertical = "down" if y == 0 else "up"
+        bar([1, y, 0], [15, y + 1, 1], ["north", vertical])
+        bar([1, y, 15], [15, y + 1, 16], ["south", vertical])
+        bar([0, y, 1], [1, y + 1, 15], ["west", vertical])
+        bar([15, y, 1], [16, y + 1, 15], ["east", vertical])
+
+    return {
+        "render_type": "minecraft:cutout_mipped",
+        "textures": {"particle": MAT_TEX, "mat": MAT_TEX},
+        "elements": elements
     }
 
 
@@ -438,9 +473,13 @@ def main():
                {"model": {"type": "storagedrawers:framed_block", "model": "drawertanks:framed_tank", "variant": "facing=north"}})
     write_json(os.path.join(a, "models/block/framed/tank_sides.json"), meta_tank_sides_model())
     write_json(os.path.join(a, "blockstates/meta_tank_side.json"), facing_blockstate("drawertanks:block/framed/tank_sides"))
+    write_json(os.path.join(a, "models/block/framed/tank_trim.json"), meta_tank_trim_model())
+    write_json(os.path.join(a, "blockstates/meta_tank_trim.json"),
+               {"variants": {"": {"model": "drawertanks:block/framed/tank_trim"}}})
 
     lang["block.drawertanks.framed_tank"] = "Framed Tank"
     lang["block.drawertanks.meta_tank_side"] = "Tank Side"
+    lang["block.drawertanks.meta_tank_trim"] = "Tank Trim"
     lang["block.drawertanks.linked_tank"] = "Linked Tank"
     lang["message.drawertanks.linked.cleared"] = "Channel colors washed off"
 
