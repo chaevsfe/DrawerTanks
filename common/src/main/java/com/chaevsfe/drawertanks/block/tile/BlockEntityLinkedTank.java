@@ -3,6 +3,7 @@ package com.chaevsfe.drawertanks.block.tile;
 import com.chaevsfe.drawertanks.block.tile.tiledata.TankData;
 import com.chaevsfe.drawertanks.config.TankConfig;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
+import com.chaevsfe.drawertanks.platform.Bridges;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.BlockEntityDataShim;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
@@ -50,6 +51,7 @@ public class BlockEntityLinkedTank extends BlockEntityTank
 
         channels[strip] = color;
         lastSeenVersion = Long.MIN_VALUE;
+        Bridges.INVALIDATE_CAPS.accept(this);
         onContentsChanged();
         return true;
     }
@@ -64,11 +66,12 @@ public class BlockEntityLinkedTank extends BlockEntityTank
             return false;
 
         lastSeenVersion = Long.MIN_VALUE;
+        Bridges.INVALIDATE_CAPS.accept(this);
         onContentsChanged();
         return true;
     }
 
-    private LinkedChannels.Pool pool () {
+    public LinkedChannels.Pool pool () {
         if (!(getLevel() instanceof ServerLevel serverLevel))
             return null;
         return LinkedChannels.get(serverLevel.getServer()).pool(channelKey());
@@ -82,6 +85,12 @@ public class BlockEntityLinkedTank extends BlockEntityTank
 
     public TankData clientMirror () {
         return super.tankData();
+    }
+
+    @Override
+    public TankTarget target () {
+        LinkedChannels.Pool pool = pool();
+        return pool != null ? pool.target() : super.target();
     }
 
     @Override

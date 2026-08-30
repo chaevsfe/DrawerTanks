@@ -49,6 +49,11 @@ public class DrawerTanksNeoForge
                 NeoforgeTankConfig.apply();
         });
 
+        Bridges.INVALIDATE_CAPS = be -> {
+            if (be.getLevel() != null && !be.getLevel().isClientSide())
+                be.invalidateCapabilities();
+        };
+
         NeoforgeRegistryContext context = new NeoforgeRegistryContext(modEventBus);
 
         ModBlocks.init(context);

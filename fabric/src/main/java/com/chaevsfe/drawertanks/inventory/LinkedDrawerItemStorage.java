@@ -8,27 +8,29 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.Map;
-
 public class LinkedDrawerItemStorage extends SnapshotParticipant<LinkedDrawerItemStorage.State> implements SingleSlotStorage<ItemVariant>
 {
     public record State(ItemStack prototype, long count) { }
 
-    private static final Map<BlockEntityLinkedDrawer, LinkedDrawerItemStorage> WRAPPERS =
-        new com.google.common.collect.MapMaker().weakKeys().makeMap();
+    private final LinkedItemChannels.Pool pool;
 
-    private final BlockEntityLinkedDrawer drawer;
-
-    private LinkedDrawerItemStorage (BlockEntityLinkedDrawer drawer) {
-        this.drawer = drawer;
+    private LinkedDrawerItemStorage (LinkedItemChannels.Pool pool) {
+        this.pool = pool;
     }
 
+    // cached on the pool, not the block entity: every drawer on a channel must share one participant,
+    // and the pool holds no reference back into the level
     public static LinkedDrawerItemStorage of (BlockEntityLinkedDrawer drawer) {
-        return WRAPPERS.computeIfAbsent(drawer, LinkedDrawerItemStorage::new);
-    }
+        LinkedItemChannels.Pool pool = drawer.pool();
+        if (pool == null)
+            return null;
 
-    private LinkedItemChannels.Pool pool () {
-        return drawer.pool();
+        if (pool.platformHandler instanceof LinkedDrawerItemStorage storage)
+            return storage;
+
+        LinkedDrawerItemStorage storage = new LinkedDrawerItemStorage(pool);
+        pool.platformHandler = storage;
+        return storage;
     }
 
     @Override
@@ -36,15 +38,11 @@ public class LinkedDrawerItemStorage extends SnapshotParticipant<LinkedDrawerIte
         if (resource.isBlank() || maxAmount <= 0)
             return 0;
 
-        LinkedItemChannels.Pool pool = pool();
-        if (pool == null)
-            return 0;
-
         ItemStack incoming = resource.toStack(1);
         if (!pool.isEmpty() && !ItemStack.isSameItemSameComponents(pool.prototype, incoming))
             return 0;
 
-        long space = Math.max(0, drawer.capacityItems() - pool.count);
+        long space = Math.max(0, LinkedItemChannels.Pool.capacityFor(incoming) - pool.count);
         long accepted = Math.min(maxAmount, space);
         if (accepted <= 0)
             return 0;
@@ -62,8 +60,7 @@ public class LinkedDrawerItemStorage extends SnapshotParticipant<LinkedDrawerIte
         if (resource.isBlank() || maxAmount <= 0)
             return 0;
 
-        LinkedItemChannels.Pool pool = pool();
-        if (pool == null || pool.isEmpty() || !ItemStack.isSameItemSameComponents(pool.prototype, resource.toStack(1)))
+        if (pool.isEmpty() || !ItemStack.isSameItemSameComponents(pool.prototype, resource.toStack(1)))
             return 0;
 
         long extracted = Math.min(maxAmount, pool.count);
@@ -79,42 +76,36 @@ public class LinkedDrawerItemStorage extends SnapshotParticipant<LinkedDrawerIte
 
     @Override
     public boolean isResourceBlank () {
-        LinkedItemChannels.Pool pool = pool();
-        return pool == null || pool.prototype.isEmpty();
+        return pool.prototype.isEmpty();
     }
 
     @Override
     public ItemVariant getResource () {
-        LinkedItemChannels.Pool pool = pool();
-        return pool == null || pool.prototype.isEmpty() ? ItemVariant.blank() : ItemVariant.of(pool.prototype);
+        return pool.prototype.isEmpty() ? ItemVariant.blank() : ItemVariant.of(pool.prototype);
     }
 
     @Override
     public long getAmount () {
-        LinkedItemChannels.Pool pool = pool();
-        return pool == null ? 0 : pool.count;
+        return pool.count;
     }
 
     @Override
     public long getCapacity () {
-        return drawer.capacityItems();
+        return pool.capacity();
     }
 
     @Override
     protected State createSnapshot () {
-        LinkedItemChannels.Pool pool = pool();
-        return pool == null ? new State(ItemStack.EMPTY, 0) : new State(pool.prototype.copy(), pool.count);
+        return new State(pool.prototype.copy(), pool.count);
     }
 
     @Override
     protected void readSnapshot (State snapshot) {
-        LinkedItemChannels.Pool pool = pool();
-        if (pool != null)
-            pool.set(snapshot.prototype(), snapshot.count());
+        pool.set(snapshot.prototype(), snapshot.count());
     }
 
     @Override
     protected void onFinalCommit () {
-        drawer.onPoolChanged();
+        pool.changed();
     }
 }

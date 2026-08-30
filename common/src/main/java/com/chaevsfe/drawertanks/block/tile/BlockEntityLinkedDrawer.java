@@ -2,6 +2,7 @@ package com.chaevsfe.drawertanks.block.tile;
 
 import com.chaevsfe.drawertanks.config.TankConfig;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
+import com.chaevsfe.drawertanks.platform.Bridges;
 import com.jaquadro.minecraft.storagedrawers.block.tile.BaseBlockEntity;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.BlockEntityDataShim;
 import com.mojang.serialization.Codec;
@@ -56,6 +57,7 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity
 
         channels[strip] = color;
         lastSeenVersion = Long.MIN_VALUE;
+        Bridges.INVALIDATE_CAPS.accept(this);
         onPoolChanged();
         return true;
     }
@@ -70,6 +72,7 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity
             return false;
 
         lastSeenVersion = Long.MIN_VALUE;
+        Bridges.INVALIDATE_CAPS.accept(this);
         onPoolChanged();
         return true;
     }
@@ -91,9 +94,7 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity
     }
 
     public long capacityItems () {
-        ItemStack prototype = displayItem();
-        int stackSize = prototype.isEmpty() ? 64 : prototype.getMaxStackSize();
-        return (long) TankConfig.linkedChannelCapacityStacks * stackSize;
+        return LinkedItemChannels.Pool.capacityFor(displayItem());
     }
 
     public float fillFraction () {

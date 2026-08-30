@@ -51,7 +51,7 @@ public class InventoryTankUpgrade implements Container
     @Override
     @NotNull
     public ItemStack removeItem (int slot, int count) {
-        ItemStack stack = getItem(slot);
+        ItemStack stack = getItem(slot).copy();
         if (count > 0 && tank != null)
             tank.upgrades().setUpgrade(slot, ItemStack.EMPTY);
         return stack;

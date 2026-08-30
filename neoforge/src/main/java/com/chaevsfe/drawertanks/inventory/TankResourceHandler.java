@@ -1,6 +1,7 @@
 package com.chaevsfe.drawertanks.inventory;
 
 import com.chaevsfe.drawertanks.block.tile.BlockEntityTank;
+import com.chaevsfe.drawertanks.block.tile.TankTarget;
 import com.chaevsfe.drawertanks.block.tile.tiledata.TankData;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.world.level.material.Fluid;
@@ -14,24 +15,24 @@ public class TankResourceHandler implements ResourceHandler<FluidResource>
 {
     record State(Fluid fluid, DataComponentPatch components, long amount) { }
 
-    private final BlockEntityTank tank;
+    private final TankTarget tank;
     private final SnapshotJournal<State> journal;
     private final RootCommitJournal commitJournal;
 
-    private TankResourceHandler (BlockEntityTank tank) {
+    private TankResourceHandler (TankTarget tank) {
         this.tank = tank;
-        this.commitJournal = new RootCommitJournal(tank::onContentsChanged);
+        this.commitJournal = new RootCommitJournal(tank::onChanged);
         this.journal = new SnapshotJournal<>()
         {
             @Override
             protected State createSnapshot () {
-                TankData data = tank.tankData();
+                TankData data = tank.data();
                 return new State(data.getFluid(), data.getComponents(), data.getAmount());
             }
 
             @Override
             protected void revertToSnapshot (State snapshot) {
-                TankData data = tank.tankData();
+                TankData data = tank.data();
                 data.setFluid(snapshot.fluid(), snapshot.components());
                 data.setAmount(snapshot.amount());
             }
@@ -39,11 +40,12 @@ public class TankResourceHandler implements ResourceHandler<FluidResource>
     }
 
     public static TankResourceHandler of (BlockEntityTank tank) {
-        if (tank.platformFluidHandler() instanceof TankResourceHandler handler)
+        TankTarget target = tank.target();
+        if (target.platformHandler instanceof TankResourceHandler handler)
             return handler;
 
-        TankResourceHandler handler = new TankResourceHandler(tank);
-        tank.setPlatformFluidHandler(handler);
+        TankResourceHandler handler = new TankResourceHandler(target);
+        target.platformHandler = handler;
         return handler;
     }
 
@@ -54,18 +56,18 @@ public class TankResourceHandler implements ResourceHandler<FluidResource>
 
     @Override
     public FluidResource getResource (int index) {
-        TankData data = tank.tankData();
+        TankData data = tank.data();
         return data.hasFluid() ? FluidResource.of(data.getFluid(), data.getComponents()) : FluidResource.EMPTY;
     }
 
     @Override
     public long getAmountAsLong (int index) {
-        return tank.tankData().getAmount() / BlockEntityTank.DROPLETS_PER_MB;
+        return tank.data().getAmount() / BlockEntityTank.DROPLETS_PER_MB;
     }
 
     @Override
     public long getCapacityAsLong (int index, FluidResource resource) {
-        return tank.capacityDroplets() / BlockEntityTank.DROPLETS_PER_MB;
+        return tank.capacity() / BlockEntityTank.DROPLETS_PER_MB;
     }
 
     @Override
@@ -73,7 +75,7 @@ public class TankResourceHandler implements ResourceHandler<FluidResource>
         if (resource.isEmpty())
             return false;
 
-        TankData data = tank.tankData();
+        TankData data = tank.data();
         return !data.hasFluid() || data.matches(resource.value(), resource.getComponentsPatch());
     }
 
@@ -82,7 +84,7 @@ public class TankResourceHandler implements ResourceHandler<FluidResource>
         if (resource.isEmpty() || amount <= 0)
             return 0;
 
-        TankData data = tank.tankData();
+        TankData data = tank.data();
 
         // sub-mB residue (possible on worlds coming from fabric) is replaceable unless the fluid is locked
         boolean residueOnly = data.hasFluid() && data.getAmount() > 0
@@ -90,7 +92,7 @@ public class TankResourceHandler implements ResourceHandler<FluidResource>
         if (data.hasFluid() && !residueOnly && !data.matches(resource.value(), resource.getComponentsPatch()))
             return 0;
 
-        long capacity = tank.capacityDroplets();
+        long capacity = tank.capacity();
         long space = Math.max(0, capacity - (residueOnly ? 0 : data.getAmount()));
         long spaceMb = (space + BlockEntityTank.DROPLETS_PER_MB - 1) / BlockEntityTank.DROPLETS_PER_MB;
         int accepted = (int) Math.min(amount, spaceMb);
@@ -115,7 +117,7 @@ public class TankResourceHandler implements ResourceHandler<FluidResource>
         if (resource.isEmpty() || amount <= 0)
             return 0;
 
-        TankData data = tank.tankData();
+        TankData data = tank.data();
         if (!data.hasFluid() || !data.matches(resource.value(), resource.getComponentsPatch()))
             return 0;
 

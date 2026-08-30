@@ -73,7 +73,7 @@ public class BlockFramedTank extends BlockTank implements IFramedBlock
         for (int i = 0; i < tank.upgrades().getSlotCount(); i++) {
             ItemStack upgrade = tank.upgrades().getUpgrade(i);
             if (!upgrade.isEmpty())
-                upgrades.add(new ItemStackWithSlot(i, upgrade));
+                upgrades.add(new ItemStackWithSlot(i, upgrade.copy()));
         }
         if (!upgrades.isEmpty())
             drop.set(ModDataComponents.TANK_UPGRADES.get(), new com.chaevsfe.drawertanks.components.TankUpgrades(upgrades));

@@ -47,7 +47,39 @@ public class BlockEntityTank extends BaseBlockEntity
     private final TankUpgradeData upgradeData = new TankUpgradeData();
     private final TankAttributes attributes = new TankAttributes();
 
-    private Object platformFluidHandler;
+    private final TankTarget target = new TankTarget()
+    {
+        @Override
+        public TankData data () {
+            return BlockEntityTank.this.tankData();
+        }
+
+        @Override
+        public long capacity () {
+            return capacityDroplets();
+        }
+
+        @Override
+        public void onChanged () {
+            onContentsChanged();
+        }
+
+        @Override
+        public boolean isVoid () {
+            return BlockEntityTank.this.isVoid();
+        }
+
+        @Override
+        public boolean isUnlimitedVending () {
+            return BlockEntityTank.this.isUnlimitedVending();
+        }
+
+        @Override
+        public boolean isFluidLocked () {
+            return BlockEntityTank.this.isFluidLocked();
+        }
+    };
+
     private boolean syncPending;
     private long lastSyncTime = -100;
 
@@ -115,12 +147,8 @@ public class BlockEntityTank extends BaseBlockEntity
         return Math.min(1f, (float) ((double) tankData.getAmount() / capacity));
     }
 
-    public Object platformFluidHandler () {
-        return platformFluidHandler;
-    }
-
-    public void setPlatformFluidHandler (Object handler) {
-        platformFluidHandler = handler;
+    public TankTarget target () {
+        return target;
     }
 
     public void onContentsChanged () {
@@ -269,7 +297,7 @@ public class BlockEntityTank extends BaseBlockEntity
         for (int i = 0; i < upgradeData.getSlotCount(); i++) {
             ItemStack upgrade = upgradeData.getUpgrade(i);
             if (!upgrade.isEmpty())
-                upgrades.add(new ItemStackWithSlot(i, upgrade));
+                upgrades.add(new ItemStackWithSlot(i, upgrade.copy()));
         }
         if (!upgrades.isEmpty())
             builder.set(ModDataComponents.TANK_UPGRADES.get(), new TankUpgrades(upgrades));
@@ -291,7 +319,7 @@ public class BlockEntityTank extends BaseBlockEntity
         }
 
         void forceSetUpgrade (int slot, ItemStack stack) {
-            upgrades[slot] = stack;
+            upgrades[slot] = stack.isEmpty() ? ItemStack.EMPTY : stack.copy();
             setDrawerAttributes(attributes);
         }
 

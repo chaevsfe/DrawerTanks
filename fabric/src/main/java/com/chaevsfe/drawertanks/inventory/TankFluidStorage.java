@@ -1,6 +1,7 @@
 package com.chaevsfe.drawertanks.inventory;
 
 import com.chaevsfe.drawertanks.block.tile.BlockEntityTank;
+import com.chaevsfe.drawertanks.block.tile.TankTarget;
 import com.chaevsfe.drawertanks.block.tile.tiledata.TankData;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
@@ -13,18 +14,19 @@ public class TankFluidStorage extends SnapshotParticipant<TankFluidStorage.State
 {
     public record State(Fluid fluid, DataComponentPatch components, long amount) { }
 
-    private final BlockEntityTank tank;
+    private final TankTarget tank;
 
-    private TankFluidStorage (BlockEntityTank tank) {
+    private TankFluidStorage (TankTarget tank) {
         this.tank = tank;
     }
 
     public static TankFluidStorage of (BlockEntityTank tank) {
-        if (tank.platformFluidHandler() instanceof TankFluidStorage storage)
+        TankTarget target = tank.target();
+        if (target.platformHandler instanceof TankFluidStorage storage)
             return storage;
 
-        TankFluidStorage storage = new TankFluidStorage(tank);
-        tank.setPlatformFluidHandler(storage);
+        TankFluidStorage storage = new TankFluidStorage(target);
+        target.platformHandler = storage;
         return storage;
     }
 
@@ -33,11 +35,11 @@ public class TankFluidStorage extends SnapshotParticipant<TankFluidStorage.State
         if (resource.isBlank() || maxAmount <= 0)
             return 0;
 
-        TankData data = tank.tankData();
+        TankData data = tank.data();
         if (data.hasFluid() && !data.matches(resource.getFluid(), resource.getComponentsPatch()))
             return 0;
 
-        long space = Math.max(0, tank.capacityDroplets() - data.getAmount());
+        long space = Math.max(0, tank.capacity() - data.getAmount());
         long accepted = Math.min(maxAmount, space);
 
         if (accepted > 0) {
@@ -57,7 +59,7 @@ public class TankFluidStorage extends SnapshotParticipant<TankFluidStorage.State
         if (resource.isBlank() || maxAmount <= 0)
             return 0;
 
-        TankData data = tank.tankData();
+        TankData data = tank.data();
         if (!data.hasFluid() || !data.matches(resource.getFluid(), resource.getComponentsPatch()))
             return 0;
 
@@ -75,40 +77,40 @@ public class TankFluidStorage extends SnapshotParticipant<TankFluidStorage.State
 
     @Override
     public boolean isResourceBlank () {
-        return !tank.tankData().hasFluid();
+        return !tank.data().hasFluid();
     }
 
     @Override
     public FluidVariant getResource () {
-        TankData data = tank.tankData();
+        TankData data = tank.data();
         return data.hasFluid() ? FluidVariant.of(data.getFluid(), data.getComponents()) : FluidVariant.blank();
     }
 
     @Override
     public long getAmount () {
-        return tank.tankData().getAmount();
+        return tank.data().getAmount();
     }
 
     @Override
     public long getCapacity () {
-        return tank.capacityDroplets();
+        return tank.capacity();
     }
 
     @Override
     protected State createSnapshot () {
-        TankData data = tank.tankData();
+        TankData data = tank.data();
         return new State(data.getFluid(), data.getComponents(), data.getAmount());
     }
 
     @Override
     protected void readSnapshot (State snapshot) {
-        TankData data = tank.tankData();
+        TankData data = tank.data();
         data.setFluid(snapshot.fluid(), snapshot.components());
         data.setAmount(snapshot.amount());
     }
 
     @Override
     protected void onFinalCommit () {
-        tank.onContentsChanged();
+        tank.onChanged();
     }
 }
