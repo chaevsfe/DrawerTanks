@@ -3,6 +3,7 @@
     "textures": {
         "particle": "drawertanks:block/linked_tank_side",
         "side": "drawertanks:block/linked_tank_side",
+        "top": "drawertanks:block/linked_tank_top",
         "front": "drawertanks:block/linked_tank_front",
         "interior": "drawertanks:block/tank_interior"
     },
@@ -66,7 +67,7 @@
                         16,
                         16
                     ],
-                    "texture": "#side",
+                    "texture": "#top",
                     "cullface": "up"
                 },
                 "down": {
@@ -76,7 +77,7 @@
                         16,
                         16
                     ],
-                    "texture": "#side",
+                    "texture": "#top",
                     "cullface": "down"
                 }
             }

@@ -31,7 +31,7 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
     private static final float UNIT = 0.0625f;
     private static final float WIN_MIN = 3;
     private static final float WIN_MAX = 13;
-    private static final float DEPTH = 2;
+    private static final float DEPTH = 0.5f;
 
     private final Font font;
 

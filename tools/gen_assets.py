@@ -36,13 +36,12 @@ def make_front(side_img):
 
 
 def make_interior(side_img):
-    # neutral gray vat interior so dark fluids like oil stay visible
-    img = Image.new("RGBA", (16, 16))
+    # dark wood vat interior
+    img = side_img.copy().convert("RGBA")
     px = img.load()
     for y in range(16):
         for x in range(16):
-            v = 112 + ((x * 31 + y * 17) % 5) * 5
-            px[x, y] = (v, v, v + 3, 255)
+            px[x, y] = darken(px[x, y], 0.22)
     return img
 
 
@@ -54,6 +53,45 @@ def tint(px, f, add):
 FRAME_OUTER = (47, 79, 71, 255)
 FRAME_INNER = (28, 52, 47, 255)
 FRAME_KNOB = (87, 130, 122, 255)
+
+ENDER_TEX = None
+
+
+def load_ender_tex(mc_assets):
+    global ENDER_TEX
+    path = os.path.join(mc_assets, "assets/minecraft/textures/entity/chest/ender.png")
+    if os.path.exists(path):
+        ENDER_TEX = Image.open(path).convert("RGBA")
+
+
+def pad_to_16(img):
+    w, h = img.size
+    out = Image.new("RGBA", (16, 16))
+    ox = (16 - w) // 2
+    oy = (16 - h) // 2
+    out.paste(img, (ox, oy))
+    px = out.load()
+    for y in range(16):
+        for x in range(16):
+            sx = min(max(x, ox), ox + w - 1)
+            sy = min(max(y, oy), oy + h - 1)
+            if px[x, y][3] == 0:
+                px[x, y] = px[sx, sy]
+    return out
+
+
+def chest_side_16():
+    # the chest side as seen in world: lid strip (with the opening seam) over the base
+    lid = ENDER_TEX.crop((0, 14, 14, 19))
+    base = ENDER_TEX.crop((0, 33, 14, 43))
+    face = Image.new("RGBA", (14, 15))
+    face.paste(lid, (0, 0))
+    face.paste(base, (0, 5))
+    return pad_to_16(face)
+
+
+def chest_top_16():
+    return pad_to_16(ENDER_TEX.crop((14, 0, 28, 14)))
 
 
 def ender_body(x, y):
@@ -67,6 +105,9 @@ def ender_body(x, y):
 
 
 def make_linked_side(_side_img):
+    if ENDER_TEX is not None:
+        return chest_side_16()
+
     img = Image.new("RGBA", (16, 16))
     px = img.load()
     for y in range(16):
@@ -90,6 +131,18 @@ def make_linked_side(_side_img):
 def make_linked_front(side_img):
     img = make_linked_side(side_img)
     px = img.load()
+
+    ring = FRAME_OUTER
+    ring_dark = FRAME_INNER
+    eye_bright = (126, 230, 170, 255)
+    eye_dark = (47, 138, 94, 255)
+    if ENDER_TEX is not None:
+        # brightest dot of the lid border, so the ring reads like the chest's studded frame
+        ring = max((ENDER_TEX.getpixel((x, 0)) for x in range(14, 28)), key=lambda p: p[0] + p[1] + p[2])
+        ring_dark = ENDER_TEX.getpixel((2, 36))
+        eye_bright = ENDER_TEX.getpixel((49, 36))
+        eye_dark = ENDER_TEX.getpixel((47, 38))
+
     for y in range(WIN_MIN - 1, WIN_MAX + 2):
         for x in range(WIN_MIN - 1, WIN_MAX + 2):
             inner = WIN_MIN <= x <= WIN_MAX and WIN_MIN <= y <= WIN_MAX
@@ -97,14 +150,14 @@ def make_linked_front(side_img):
             if inner and not corner:
                 px[x, y] = (0, 0, 0, 0)
             elif corner:
-                px[x, y] = FRAME_INNER
+                px[x, y] = ring_dark
             else:
-                px[x, y] = FRAME_OUTER
+                px[x, y] = ring
     # eye-of-ender latch above the window
-    px[7, 0] = (47, 138, 94, 255)
-    px[8, 0] = (47, 138, 94, 255)
-    px[7, 1] = (126, 230, 170, 255)
-    px[8, 1] = (30, 66, 48, 255)
+    px[7, 0] = eye_dark
+    px[8, 0] = eye_dark
+    px[7, 1] = eye_bright
+    px[8, 1] = eye_dark
     return img
 
 
@@ -160,9 +213,14 @@ def linked_block_model():
     model["textures"] = {
         "particle": "drawertanks:block/linked_tank_side",
         "side": "drawertanks:block/linked_tank_side",
+        "top": "drawertanks:block/linked_tank_top",
         "front": "drawertanks:block/linked_tank_front",
         "interior": "drawertanks:block/tank_interior"
     }
+    for element in model["elements"]:
+        for face in ("up", "down"):
+            if face in element["faces"] and element["faces"][face]["texture"] == "#side":
+                element["faces"][face]["texture"] = "#top"
     return model
 
 
@@ -309,9 +367,16 @@ def main():
     os.makedirs(os.path.join(a, "textures/gui"), exist_ok=True)
     make_gui(sd_res).save(os.path.join(a, "textures/gui/tank.png"))
 
+    if len(sys.argv) > 3:
+        load_ender_tex(sys.argv[3])
+
     dark_side = Image.open(os.path.join(sd_tex, "drawers_dark_oak_side.png"))
     make_linked_side(dark_side).save(os.path.join(a, "textures/block/linked_tank_side.png"))
     make_linked_front(dark_side).save(os.path.join(a, "textures/block/linked_tank_front.png"))
+    if ENDER_TEX is not None:
+        chest_top_16().save(os.path.join(a, "textures/block/linked_tank_top.png"))
+    else:
+        make_linked_side(dark_side).save(os.path.join(a, "textures/block/linked_tank_top.png"))
     os.makedirs(os.path.join(a, "textures/item"), exist_ok=True)
     make_coupler().save(os.path.join(a, "textures/item/tank_coupler.png"))
 
