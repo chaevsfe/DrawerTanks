@@ -62,6 +62,7 @@ public class DrawerTanksNeoForge
 
     private void registerCapabilities (RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(Capabilities.Fluid.BLOCK, ModBlockEntities.TANK.get(), (be, side) -> TankResourceHandler.of(be));
+        event.registerBlockEntity(Capabilities.Fluid.BLOCK, ModBlockEntities.LINKED_TANK.get(), (be, side) -> TankResourceHandler.of(be));
     }
 
     private void buildCreativeTabs (BuildCreativeModeTabContentsEvent event) {

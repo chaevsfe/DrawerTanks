@@ -35,6 +35,7 @@ public class DrawerTanksFabric implements ModInitializer
         ModCreativeTabs.init();
 
         FluidStorage.SIDED.registerForBlockEntity((be, dir) -> TankFluidStorage.of(be), ModBlockEntities.TANK.get());
+        FluidStorage.SIDED.registerForBlockEntity((be, dir) -> TankFluidStorage.of(be), ModBlockEntities.LINKED_TANK.get());
 
         Bridges.FLUID = new FluidBridge()
         {

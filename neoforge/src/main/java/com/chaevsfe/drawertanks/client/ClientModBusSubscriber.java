@@ -22,6 +22,7 @@ public class ClientModBusSubscriber
     @SubscribeEvent
     public static void registerEntityRenderers (EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(ModBlockEntities.TANK.get(), BlockEntityTankRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.LINKED_TANK.get(), BlockEntityTankRenderer::new);
     }
 
     @SubscribeEvent

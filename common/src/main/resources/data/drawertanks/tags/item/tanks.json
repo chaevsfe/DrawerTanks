@@ -12,7 +12,6 @@
         "drawertanks:oak_tank",
         "drawertanks:pale_oak_tank",
         "drawertanks:spruce_tank",
-        "drawertanks:warped_tank",
-        "drawertanks:linked_tank"
+        "drawertanks:warped_tank"
     ]
 }

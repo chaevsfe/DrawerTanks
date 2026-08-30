@@ -1,6 +1,7 @@
 package com.chaevsfe.drawertanks.core;
 
 import com.chaevsfe.drawertanks.ModConstants;
+import com.chaevsfe.drawertanks.block.BlockLinkedTank;
 import com.chaevsfe.drawertanks.block.BlockTank;
 import com.texelsaurus.minecraft.chameleon.ChameleonServices;
 import com.texelsaurus.minecraft.chameleon.api.ChameleonInit;
@@ -32,6 +33,13 @@ public final class ModBlocks
         for (String wood : WOODS)
             TANKS.add(registerTank(wood + "_tank"));
     }
+
+    public static final RegistryEntry<BlockLinkedTank> LINKED_TANK = BLOCKS.register("linked_tank",
+        () -> new BlockLinkedTank(Properties.of()
+            .mapColor(MapColor.COLOR_BLACK)
+            .strength(10f, 600f)
+            .sound(SoundType.WOOD)
+            .setId(ResourceKey.create(Registries.BLOCK, ModConstants.loc("linked_tank")))));
 
     private ModBlocks () { }
 

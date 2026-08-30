@@ -103,7 +103,7 @@ public class BlockTank extends HorizontalDirectionalBlock implements EntityBlock
 
     @Override
     protected InteractionResult useWithoutItem (BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-        if (!player.isShiftKeyDown())
+        if (!player.isShiftKeyDown() || !player.getMainHandItem().isEmpty())
             return InteractionResult.PASS;
 
         if (!(level.getBlockEntity(pos) instanceof BlockEntityTank tank))

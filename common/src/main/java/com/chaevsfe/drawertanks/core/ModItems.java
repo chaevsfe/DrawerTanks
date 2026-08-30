@@ -1,6 +1,7 @@
 package com.chaevsfe.drawertanks.core;
 
 import com.chaevsfe.drawertanks.ModConstants;
+import com.chaevsfe.drawertanks.item.ItemTankCoupler;
 import com.texelsaurus.minecraft.chameleon.ChameleonServices;
 import com.texelsaurus.minecraft.chameleon.api.ChameleonInit;
 import com.texelsaurus.minecraft.chameleon.registry.ChameleonRegistry;
@@ -18,6 +19,11 @@ public final class ModItems
     public static final ChameleonRegistry<Item> ITEMS = ChameleonServices.REGISTRY.create(BuiltInRegistries.ITEM, ModConstants.MOD_ID);
 
     private ModItems () { }
+
+    public static final RegistryEntry<ItemTankCoupler> TANK_COUPLER = ITEMS.register("tank_coupler",
+        () -> new ItemTankCoupler(new Item.Properties()
+            .stacksTo(1)
+            .setId(modKey(ModConstants.loc("tank_coupler")))));
 
     public static void init (ChameleonInit.InitContext context) {
         for (RegistryEntry<Block> ro : ModBlocks.BLOCKS.getEntries())

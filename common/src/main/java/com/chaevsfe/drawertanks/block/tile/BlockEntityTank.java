@@ -36,7 +36,11 @@ public class BlockEntityTank extends BaseBlockEntity
     private long lastSyncTime = Long.MIN_VALUE;
 
     public BlockEntityTank (BlockPos pos, BlockState state) {
-        super(ModBlockEntities.TANK.get(), pos, state);
+        this(ModBlockEntities.TANK.get(), pos, state);
+    }
+
+    protected BlockEntityTank (net.minecraft.world.level.block.entity.BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
 
         upgradeData.setDrawerAttributes(attributes);
         injectData(upgradeData);

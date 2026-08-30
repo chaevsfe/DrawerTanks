@@ -17,6 +17,7 @@ public class DrawerTanksFabricClient implements ClientModInitializer
     @Override
     public void onInitializeClient () {
         BlockEntityRenderers.register(ModBlockEntities.TANK.get(), BlockEntityTankRenderer::new);
+        BlockEntityRenderers.register(ModBlockEntities.LINKED_TANK.get(), BlockEntityTankRenderer::new);
 
         Bridges.CLIENT_FLUID = new ClientFluidBridge()
         {

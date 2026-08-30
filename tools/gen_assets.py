@@ -44,6 +44,62 @@ def make_interior(side_img):
     return img
 
 
+def tint(px, f, add):
+    return (min(255, int(px[0] * f) + add[0]), min(255, int(px[1] * f) + add[1]),
+            min(255, int(px[2] * f) + add[2]), px[3])
+
+
+def make_linked_side(side_img):
+    img = side_img.copy().convert("RGBA")
+    px = img.load()
+    for y in range(16):
+        for x in range(16):
+            px[x, y] = tint(px[x, y], 0.40, (10, 0, 26))
+    for x, y in [(0, 0), (15, 0), (0, 15), (15, 15)]:
+        px[x, y] = (70, 32, 104, 255)
+    return img
+
+
+def make_linked_front(side_img):
+    img = make_linked_side(side_img)
+    px = img.load()
+    for y in range(WIN_MIN - 1, WIN_MAX + 2):
+        for x in range(WIN_MIN - 1, WIN_MAX + 2):
+            inner = WIN_MIN <= x <= WIN_MAX and WIN_MIN <= y <= WIN_MAX
+            corner = (x in (WIN_MIN, WIN_MAX)) and (y in (WIN_MIN, WIN_MAX))
+            if inner and not corner:
+                px[x, y] = (0, 0, 0, 0)
+            elif corner:
+                px[x, y] = (58, 26, 88, 255)
+            else:
+                px[x, y] = (96, 48, 148, 255)
+    return img
+
+
+def make_coupler():
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    px = img.load()
+    for i in range(8):
+        x, y = 3 + i, 12 - i
+        px[x, y] = (196, 146, 66, 255)
+        px[x + 1, y] = (120, 85, 35, 255)
+    for x, y in [(11, 3), (12, 3), (11, 4), (12, 4)]:
+        px[x, y] = (110, 230, 160, 255)
+    px[12, 3] = (26, 66, 44, 255)
+    return img
+
+
+def linked_block_model():
+    model = block_model("dark_oak")
+    model["textures"] = {
+        "particle": "drawertanks:block/linked_tank_side",
+        "side": "drawertanks:block/linked_tank_side",
+        "front": "drawertanks:block/linked_tank_front",
+        "interior": "drawertanks:block/tank_interior"
+    }
+    return model
+
+
 def block_model(wood):
     side = f"storagedrawers:block/drawers_{wood}_side"
     return {
@@ -184,6 +240,50 @@ def main():
         pretty = " ".join(w.capitalize() for w in wood.split("_"))
         lang[f"block.drawertanks.{wood}_tank"] = f"{pretty} Tank"
 
+    dark_side = Image.open(os.path.join(sd_tex, "drawers_dark_oak_side.png"))
+    make_linked_side(dark_side).save(os.path.join(a, "textures/block/linked_tank_side.png"))
+    make_linked_front(dark_side).save(os.path.join(a, "textures/block/linked_tank_front.png"))
+    os.makedirs(os.path.join(a, "textures/item"), exist_ok=True)
+    make_coupler().save(os.path.join(a, "textures/item/tank_coupler.png"))
+
+    m = linked_block_model()
+    write_json(os.path.join(a, "models/block/tank_linked.json"), m)
+    write_json(os.path.join(a, "blockstates/linked_tank.json"), {"variants": {
+        "facing=north": {"model": "drawertanks:block/tank_linked"},
+        "facing=east": {"model": "drawertanks:block/tank_linked", "y": 90},
+        "facing=south": {"model": "drawertanks:block/tank_linked", "y": 180},
+        "facing=west": {"model": "drawertanks:block/tank_linked", "y": 270}
+    }})
+    write_json(os.path.join(a, "items/linked_tank.json"),
+               {"model": {"type": "minecraft:model", "model": "drawertanks:block/tank_linked"}})
+    write_json(os.path.join(a, "models/item/tank_coupler.json"),
+               {"parent": "minecraft:item/generated", "textures": {"layer0": "drawertanks:item/tank_coupler"}})
+    write_json(os.path.join(a, "items/tank_coupler.json"),
+               {"model": {"type": "minecraft:model", "model": "drawertanks:item/tank_coupler"}})
+
+    write_json(os.path.join(d, "tags/item/tanks.json"),
+               {"replace": False, "values": [f"drawertanks:{w}_tank" for w in WOODS]})
+    write_json(os.path.join(d, "recipe/linked_tank.json"), {
+        "type": "minecraft:crafting_shaped",
+        "pattern": ["OEO", "ETE", "OEO"],
+        "key": {"O": "minecraft:obsidian", "E": "minecraft:ender_eye", "T": "#drawertanks:tanks"},
+        "result": {"id": "drawertanks:linked_tank", "count": 1}
+    })
+    write_json(os.path.join(d, "recipe/tank_coupler.json"), {
+        "type": "minecraft:crafting_shaped",
+        "pattern": ["E", "R", "I"],
+        "key": {"E": "minecraft:ender_eye", "R": "minecraft:blaze_rod", "I": "minecraft:iron_ingot"},
+        "result": {"id": "drawertanks:tank_coupler", "count": 1}
+    })
+    write_json(os.path.join(d, "loot_table/blocks/linked_tank.json"), loot_table("linked"))
+
+    lang["block.drawertanks.linked_tank"] = "Linked Tank"
+    lang["item.drawertanks.tank_coupler"] = "Tank Coupler"
+    lang["message.drawertanks.coupler.source_selected"] = "Source tank selected"
+    lang["message.drawertanks.coupler.linked"] = "Tanks linked, this tank now pulls from the source"
+    lang["message.drawertanks.coupler.unlinked"] = "Link cleared"
+    lang["message.drawertanks.coupler.same_tank"] = "Select a different tank to link"
+
     lang["itemGroup.drawertanks"] = "Drawer Tanks"
     lang["tooltip.drawertanks.capacity"] = "Capacity: %s B"
     lang["tooltip.drawertanks.contents"] = "%s: %s / %s B"
@@ -191,9 +291,9 @@ def main():
     write_json(os.path.join(a, "lang/en_us.json"), dict(sorted(lang.items())))
 
     write_json(os.path.join(dt_res, "data/minecraft/tags/block/mineable/axe.json"),
-               {"replace": False, "values": [f"drawertanks:{w}_tank" for w in WOODS]})
+               {"replace": False, "values": [f"drawertanks:{w}_tank" for w in WOODS] + ["drawertanks:linked_tank"]})
 
-    print(f"generated assets for {len(WOODS)} woods")
+    print(f"generated assets for {len(WOODS)} woods + linked tank")
 
 
 if __name__ == "__main__":

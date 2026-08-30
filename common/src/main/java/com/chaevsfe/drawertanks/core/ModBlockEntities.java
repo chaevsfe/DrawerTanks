@@ -1,6 +1,7 @@
 package com.chaevsfe.drawertanks.core;
 
 import com.chaevsfe.drawertanks.ModConstants;
+import com.chaevsfe.drawertanks.block.tile.BlockEntityLinkedTank;
 import com.chaevsfe.drawertanks.block.tile.BlockEntityTank;
 import com.texelsaurus.minecraft.chameleon.ChameleonServices;
 import com.texelsaurus.minecraft.chameleon.api.ChameleonInit;
@@ -19,6 +20,9 @@ public final class ModBlockEntities
 
     public static final RegistryEntry<BlockEntityType<BlockEntityTank>> TANK = BLOCK_ENTITIES.register("tank", () ->
         new BlockEntityType<>(BlockEntityTank::new, ModBlocks.TANKS.stream().map(RegistryEntry::get).collect(Collectors.toSet())));
+
+    public static final RegistryEntry<BlockEntityType<BlockEntityLinkedTank>> LINKED_TANK = BLOCK_ENTITIES.register("linked_tank", () ->
+        new BlockEntityType<>(BlockEntityLinkedTank::new, Set.of(ModBlocks.LINKED_TANK.get())));
 
     private ModBlockEntities () { }
 
