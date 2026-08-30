@@ -91,10 +91,19 @@ def chest_side_16():
 
 
 def chest_top_16():
-    # lid top inset in a clean dark border rather than stretched edge pixels
+    # lid top inset in a clean dark border, with subtle mottling so it does not read flat
     lid = ENDER_TEX.crop((14, 0, 28, 14))
     out = Image.new("RGBA", (16, 16), (12, 19, 20, 255))
     out.paste(lid, (1, 1))
+    px = out.load()
+    for y in range(16):
+        for x in range(16):
+            n = (x * 7 + y * 13 + x * y) % 9
+            p = px[x, y]
+            if n == 0:
+                px[x, y] = (max(0, p[0] - 6), max(0, p[1] - 9), max(0, p[2] - 9), 255)
+            elif n == 4:
+                px[x, y] = (min(255, p[0] + 5), min(255, p[1] + 8), min(255, p[2] + 8), 255)
     return out
 
 
@@ -165,38 +174,6 @@ def make_linked_front(side_img):
     return img
 
 
-def make_coupler():
-    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
-    px = img.load()
-    # blaze rod shaft, 2px wide with highlight and shadow, gold bands
-    for i in range(9):
-        x, y = 2 + i, 14 - i
-        px[x, y] = (232, 190, 92, 255)
-        px[x + 1, y] = (176, 118, 40, 255)
-        if x + 2 <= 15 and i < 8:
-            px[x + 2, y] = (110, 70, 24, 255)
-    for i in (1, 4):
-        x, y = 2 + i, 14 - i
-        px[x, y] = (255, 232, 160, 255)
-        px[x + 1, y] = (216, 162, 60, 255)
-    # iron collar between rod and eye
-    for x, y in [(10, 5), (11, 5), (10, 6), (11, 4)]:
-        px[x, y] = (168, 168, 176, 255)
-    px[11, 5] = (120, 120, 128, 255)
-    # ender eye head: green orb with dark pupil and white glint
-    eye = {(12, 1): (46, 120, 86), (13, 1): (58, 150, 104),
-           (11, 2): (58, 150, 104), (12, 2): (120, 232, 170), (13, 2): (90, 200, 140), (14, 2): (46, 120, 86),
-           (11, 3): (90, 200, 140), (12, 3): (22, 46, 34), (13, 3): (120, 232, 170), (14, 3): (58, 150, 104),
-           (12, 4): (58, 150, 104), (13, 4): (46, 120, 86)}
-    for (x, y), c in eye.items():
-        px[x, y] = (*c, 255)
-    px[13, 2] = (235, 255, 240, 255)
-    # ender sparkles
-    for x, y in [(9, 1), (15, 5), (8, 8)]:
-        px[x, y] = (186, 108, 234, 255)
-    return img
-
-
 def make_gui(sd_res):
     img = Image.open(os.path.join(sd_res, "assets/storagedrawers/textures/gui/drawers_1.png")).convert("RGBA")
     px = img.load()
@@ -220,8 +197,10 @@ def framed_block_model():
         "front": "drawertanks:block/tank_raw_front",
         "interior": "drawertanks:block/tank_interior"
     }
-    model["elements"][0]["faces"] = {
-        "north": {"uv": [0, 0, 16, 16], "texture": "#front", "cullface": "north"}
+    # only the window opening itself; the material ring from the meta model owns the border
+    model["elements"][0] = {
+        "from": [3, 3, 0], "to": [13, 13, 0],
+        "faces": {"north": {"uv": [3, 3, 13, 13], "texture": "#front", "cullface": "north"}}
     }
     return model
 
@@ -429,8 +408,6 @@ def main():
         chest_top_16().save(os.path.join(a, "textures/block/linked_tank_top.png"))
     else:
         make_linked_side(dark_side).save(os.path.join(a, "textures/block/linked_tank_top.png"))
-    os.makedirs(os.path.join(a, "textures/item"), exist_ok=True)
-    make_coupler().save(os.path.join(a, "textures/item/tank_coupler.png"))
 
     m = linked_block_model()
     write_json(os.path.join(a, "models/block/tank_linked.json"), m)
@@ -442,10 +419,6 @@ def main():
     }})
     write_json(os.path.join(a, "items/linked_tank.json"),
                {"model": {"type": "minecraft:model", "model": "drawertanks:block/tank_linked"}})
-    write_json(os.path.join(a, "models/item/tank_coupler.json"),
-               {"parent": "minecraft:item/generated", "textures": {"layer0": "drawertanks:item/tank_coupler"}})
-    write_json(os.path.join(a, "items/tank_coupler.json"),
-               {"model": {"type": "minecraft:model", "model": "drawertanks:item/tank_coupler"}})
 
     write_json(os.path.join(d, "tags/item/tanks.json"),
                {"replace": False, "values": [f"drawertanks:{w}_tank" for w in WOODS]})
@@ -454,12 +427,6 @@ def main():
         "pattern": ["OEO", "ETE", "OEO"],
         "key": {"O": "minecraft:obsidian", "E": "minecraft:ender_eye", "T": "#drawertanks:tanks"},
         "result": {"id": "drawertanks:linked_tank", "count": 1}
-    })
-    write_json(os.path.join(d, "recipe/tank_coupler.json"), {
-        "type": "minecraft:crafting_shaped",
-        "pattern": ["E", "R", "I"],
-        "key": {"E": "minecraft:ender_eye", "R": "minecraft:blaze_rod", "I": "minecraft:iron_ingot"},
-        "result": {"id": "drawertanks:tank_coupler", "count": 1}
     })
     write_json(os.path.join(d, "loot_table/blocks/linked_tank.json"), loot_table("linked"))
 
@@ -475,11 +442,8 @@ def main():
     lang["block.drawertanks.framed_tank"] = "Framed Tank"
     lang["block.drawertanks.meta_tank_side"] = "Tank Side"
     lang["block.drawertanks.linked_tank"] = "Linked Tank"
-    lang["item.drawertanks.tank_coupler"] = "Tank Coupler"
-    lang["message.drawertanks.coupler.source_selected"] = "Source selected, now use the coupler on the tank that should receive the fluid"
-    lang["message.drawertanks.coupler.linked"] = "Linked, fluid will now flow from the source into this tank"
-    lang["message.drawertanks.coupler.unlinked"] = "Link cleared"
-    lang["message.drawertanks.coupler.same_tank"] = "This is the selected source, use the coupler on the receiving tank"
+    lang["message.drawertanks.linked.dyed"] = "Channel color %s of %s applied"
+    lang["message.drawertanks.linked.cleared"] = "Channel colors washed off"
 
     lang["itemGroup.drawertanks"] = "Drawer Tanks"
     lang["tooltip.drawertanks.capacity"] = "Capacity: %s B"

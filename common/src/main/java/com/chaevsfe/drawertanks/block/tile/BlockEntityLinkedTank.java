@@ -1,108 +1,174 @@
 package com.chaevsfe.drawertanks.block.tile;
 
 import com.chaevsfe.drawertanks.block.tile.tiledata.TankData;
+import com.chaevsfe.drawertanks.config.TankConfig;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.BlockEntityDataShim;
+import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.GlobalPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class BlockEntityLinkedTank extends BlockEntityTank
 {
-    // default 1 bucket per second, moved only while both ends' chunks are loaded
-    private static long transferPerTick () {
-        return com.chaevsfe.drawertanks.config.TankConfig.linkedTransferMbPerTick * DROPLETS_PER_MB;
-    }
+    public static final int MAX_DYES = 5;
 
-    private GlobalPos partner;
+    private final List<DyeColor> channels = new ArrayList<>();
+    private long lastSeenVersion = Long.MIN_VALUE;
+    private boolean legacyContentsPending;
 
     public BlockEntityLinkedTank (BlockPos pos, BlockState state) {
         super(ModBlockEntities.LINKED_TANK.get(), pos, state);
         injectData(new LinkData());
     }
 
-    public GlobalPos getPartner () {
-        return partner;
+    public List<DyeColor> getChannels () {
+        return channels;
     }
 
-    public void setPartner (GlobalPos partner) {
-        this.partner = partner;
+    public String channelKey () {
+        StringBuilder key = new StringBuilder();
+        for (DyeColor color : channels) {
+            if (key.length() > 0)
+                key.append(',');
+            key.append(color.getId());
+        }
+        return key.toString();
+    }
+
+    public boolean addChannelDye (DyeColor color) {
+        if (channels.size() >= MAX_DYES)
+            return false;
+
+        channels.add(color);
+        lastSeenVersion = Long.MIN_VALUE;
         onContentsChanged();
+        return true;
     }
 
-    public static void serverTickLinked (Level level, BlockPos pos, BlockState state, BlockEntityLinkedTank tank) {
-        tank.pullFromPartner();
-        BlockEntityTank.serverTick(level, pos, state, tank);
-    }
+    public boolean clearChannels () {
+        if (channels.isEmpty())
+            return false;
 
-    private void pullFromPartner () {
-        if (partner == null || !(getLevel() instanceof ServerLevel serverLevel))
-            return;
-
-        ServerLevel sourceLevel = serverLevel.getServer().getLevel(partner.dimension());
-        if (sourceLevel == null || !sourceLevel.isLoaded(partner.pos()))
-            return;
-
-        if (!(sourceLevel.getBlockEntity(partner.pos()) instanceof BlockEntityLinkedTank source)) {
-            setPartner(null);
-            return;
-        }
-
-        if (source == this) {
-            setPartner(null);
-            return;
-        }
-
-        // refuse to pull from a partner that pulls from us; a mutual link would slosh every tick
-        GlobalPos self = GlobalPos.of(serverLevel.dimension(), getBlockPos());
-        if (self.equals(source.getPartner()))
-            return;
-
-        TankData from = source.tankData();
-        TankData to = tankData();
-        if (from.isEmpty())
-            return;
-        if (to.hasFluid() && !to.matches(from.getFluid(), from.getComponents()))
-            return;
-
-        long space = Math.max(0, capacityDroplets() - to.getAmount());
-        long moved = Math.min(transferPerTick(), Math.min(from.getAmount(), space));
-        if (moved <= 0)
-            return;
-
-        to.setFluid(from.getFluid(), from.getComponents());
-        to.setAmount(to.getAmount() + moved);
+        channels.clear();
+        lastSeenVersion = Long.MIN_VALUE;
         onContentsChanged();
+        return true;
+    }
 
-        if (!source.isUnlimitedVending()) {
-            from.setAmount(from.getAmount() - moved);
-            source.onContentsChanged();
-        }
+    private LinkedChannels.Pool pool () {
+        if (!(getLevel() instanceof ServerLevel serverLevel))
+            return null;
+        return LinkedChannels.get(serverLevel.getServer()).pool(channelKey());
     }
 
     @Override
-    public void removeComponentsFromTag (ValueOutput output) {
-        super.removeComponentsFromTag(output);
-        output.discard("Partner");
+    public TankData tankData () {
+        LinkedChannels.Pool pool = pool();
+        return pool != null ? pool.data : super.tankData();
+    }
+
+    public TankData clientMirror () {
+        return super.tankData();
+    }
+
+    @Override
+    public long capacityDroplets () {
+        return (long) TankConfig.linkedChannelCapacityBuckets * DROPLETS_PER_BUCKET;
+    }
+
+    @Override
+    public boolean acceptsUpgrades () {
+        return false;
+    }
+
+    @Override
+    public void onContentsChanged () {
+        if (getLevel() instanceof ServerLevel serverLevel) {
+            LinkedChannels store = LinkedChannels.get(serverLevel.getServer());
+            store.setDirty();
+            store.pool(channelKey()).version++;
+        }
+        super.onContentsChanged();
+    }
+
+    public static void serverTickLinked (Level level, BlockPos pos, BlockState state, BlockEntityLinkedTank tank) {
+        LinkedChannels.Pool pool = tank.pool();
+        if (pool != null) {
+            if (tank.legacyContentsPending) {
+                tank.legacyContentsPending = false;
+                TankData mirror = tank.clientMirror();
+                if (!mirror.isEmpty() && (pool.data.isEmpty() || pool.data.matches(mirror.getFluid(), mirror.getComponents()))) {
+                    long space = Math.max(0, tank.capacityDroplets() - pool.data.getAmount());
+                    long moved = Math.min(space, mirror.getAmount());
+                    if (moved > 0) {
+                        pool.data.setFluid(mirror.getFluid(), mirror.getComponents());
+                        pool.data.setAmount(pool.data.getAmount() + moved);
+                        tank.onContentsChanged();
+                    }
+                }
+                mirror.clear();
+            }
+
+            if (pool.version != tank.lastSeenVersion) {
+                TankData mirror = tank.clientMirror();
+                mirror.setFluid(pool.data.getFluid(), pool.data.getComponents());
+                mirror.setAmount(pool.data.getAmount());
+                tank.superOnContentsChanged();
+                tank.lastSeenVersion = pool.version;
+            }
+        }
+
+        BlockEntityTank.serverTick(level, pos, state, tank);
+    }
+
+    private void superOnContentsChanged () {
+        super.onContentsChanged();
+    }
+
+    // channel contents live in the shared pool, not in the block or its dropped item
+    @Override
+    protected void collectImplicitComponents (net.minecraft.core.component.DataComponentMap.Builder builder) {
+    }
+
+    @Override
+    protected void applyImplicitComponents (net.minecraft.core.component.DataComponentGetter input) {
     }
 
     private class LinkData extends BlockEntityDataShim
     {
         @Override
         public void read (ValueInput input) {
-            partner = input.read("Partner", GlobalPos.CODEC).orElse(null);
+            channels.clear();
+            input.read("Channels", Codec.INT.listOf()).ifPresent(list ->
+                list.forEach(id -> {
+                    DyeColor color = DyeColor.byId(id);
+                    if (color != null && channels.size() < MAX_DYES)
+                        channels.add(color);
+                }));
+
+            // worlds from the coupler era stored fluid locally; fold it into the channel pool once
+            legacyContentsPending = !input.read("Mirror", Codec.BOOL).orElse(false);
         }
 
         @Override
         public void write (ValueOutput output) {
-            if (partner != null)
-                output.store("Partner", GlobalPos.CODEC, partner);
+            List<Integer> ids = new ArrayList<>();
+            for (DyeColor color : channels)
+                ids.add(color.getId());
+            if (!ids.isEmpty())
+                output.store("Channels", Codec.INT.listOf(), ids);
             else
-                output.discard("Partner");
+                output.discard("Channels");
+            output.store("Mirror", Codec.BOOL, true);
+            output.discard("Partner");
         }
     }
 }

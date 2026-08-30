@@ -137,6 +137,10 @@ public class BlockEntityTank extends BaseBlockEntity
             syncPending = true;
     }
 
+    public boolean acceptsUpgrades () {
+        return true;
+    }
+
     public static boolean upgradeApplies (ItemStack upgrade) {
         Item item = upgrade.getItem();
         if (item instanceof ItemUpgradeStorage)

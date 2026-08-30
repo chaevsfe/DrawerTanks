@@ -1,6 +1,7 @@
 package com.chaevsfe.drawertanks.client.renderer;
 
 import com.chaevsfe.drawertanks.block.BlockTank;
+import com.chaevsfe.drawertanks.block.tile.BlockEntityLinkedTank;
 import com.chaevsfe.drawertanks.block.tile.BlockEntityTank;
 import com.chaevsfe.drawertanks.block.tile.tiledata.TankData;
 import com.chaevsfe.drawertanks.client.renderer.state.TankRenderState;
@@ -17,7 +18,10 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.resources.model.sprite.SpriteId;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.Identifier;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.LightCoordsUtil;
@@ -32,6 +36,9 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
     private static final float WIN_MIN = 3;
     private static final float WIN_MAX = 13;
     private static final float DEPTH = 0.5f;
+
+    private static final SpriteId STUD_SPRITE = new SpriteId(TextureAtlas.LOCATION_BLOCKS,
+        Identifier.withDefaultNamespace("block/white_concrete"));
 
     private final Font font;
 
@@ -61,6 +68,15 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
             : ModCommonConfig.INSTANCE.UPGRADES.illuminationUpgrade.minIlluminationLevel.get();
         int enforcedBlockLight = Math.max(renderState.lightCoords & 0xFFFF, enforcedLight * 16);
         renderState.lightCoords = (renderState.lightCoords & 0xFFFF0000) | enforcedBlockLight;
+
+        renderState.channelColors = null;
+        if (blockEntity instanceof BlockEntityLinkedTank linked && !linked.getChannels().isEmpty()) {
+            int[] colors = new int[linked.getChannels().size()];
+            for (int i = 0; i < colors.length; i++)
+                colors[i] = linked.getChannels().get(i).getTextureDiffuseColor();
+            renderState.channelColors = colors;
+            renderState.studSprite = Minecraft.getInstance().getAtlasManager().get(STUD_SPRITE);
+        }
 
         TankData data = blockEntity.tankData();
         boolean concealed = blockEntity.isConcealed();
@@ -93,7 +109,9 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
 
     @Override
     public void submit (TankRenderState renderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
-        if (!renderState.hasFluid || renderState.sprite == null)
+        boolean drawFluid = renderState.hasFluid && renderState.sprite != null;
+        boolean drawStuds = renderState.channelColors != null && renderState.studSprite != null;
+        if (!drawFluid && !drawStuds)
             return;
 
         if (!(renderState.blockState.getBlock() instanceof BlockTank))
@@ -104,7 +122,11 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
         Direction side = renderState.blockState.getValue(BlockTank.FACING);
         alignRendering(poseStack, side);
 
-        submitNodeCollector.submitCustomGeometry(poseStack, RenderTypes.translucentMovingBlock(), new FluidQuad(renderState));
+        if (drawStuds)
+            submitNodeCollector.submitCustomGeometry(poseStack, RenderTypes.solidMovingBlock(), new ChannelStuds(renderState));
+
+        if (drawFluid)
+            submitNodeCollector.submitCustomGeometry(poseStack, RenderTypes.translucentMovingBlock(), new FluidQuad(renderState));
 
         if (renderState.amountText != null) {
             poseStack.pushPose();
@@ -137,6 +159,37 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
 
     private float getRotationYForSide2D (Direction side) {
         return sideRotationY2D[side.ordinal()] * 90 * (float) Math.PI / 180f;
+    }
+
+    record ChannelStuds(TankRenderState renderState) implements SubmitNodeCollector.CustomGeometryRenderer
+    {
+        @Override
+        public void render (PoseStack.Pose pose, VertexConsumer vertexConsumer) {
+            var sprite = renderState.studSprite;
+            float u = (sprite.getU0() + sprite.getU1()) / 2;
+            float v = (sprite.getV0() + sprite.getV1()) / 2;
+            Matrix4f matrix = pose.pose();
+            int light = renderState.lightCoords;
+
+            int count = renderState.channelColors.length;
+            float start = (16 - (3 * count - 1)) / 2f;
+            for (int i = 0; i < count; i++) {
+                int color = renderState.channelColors[i];
+                float r = ((color >> 16) & 0xFF) / 255f;
+                float g = ((color >> 8) & 0xFF) / 255f;
+                float b = (color & 0xFF) / 255f;
+                float x1 = (start + i * 3) * UNIT;
+                float x2 = x1 + 2 * UNIT;
+                float y1 = 14 * UNIT;
+                float y2 = 15 * UNIT;
+                float z = 1 + 0.004f;
+
+                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x2, y1, z, u, v, r, g, b, 1f);
+                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x2, y2, z, u, v, r, g, b, 1f);
+                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x1, y2, z, u, v, r, g, b, 1f);
+                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x1, y1, z, u, v, r, g, b, 1f);
+            }
+        }
     }
 
     record FluidQuad(TankRenderState renderState) implements SubmitNodeCollector.CustomGeometryRenderer
@@ -183,7 +236,7 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
             addVertex(matrix, pose, vertexConsumer, light, x1, y1, z, su1, svBottom, r, g, b, a);
         }
 
-        private static void addVertex (Matrix4f matrix, PoseStack.Pose pose, VertexConsumer buffer, int light, float x, float y, float z, float u, float v, float r, float g, float b, float a) {
+        static void addVertex (Matrix4f matrix, PoseStack.Pose pose, VertexConsumer buffer, int light, float x, float y, float z, float u, float v, float r, float g, float b, float a) {
             buffer.addVertex(matrix, x, y, z).setColor(r, g, b, a).setUv(u, v).setLight(light).setNormal(pose, 0, 0, 1);
         }
     }

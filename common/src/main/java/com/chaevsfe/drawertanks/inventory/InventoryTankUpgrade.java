@@ -104,7 +104,7 @@ public class InventoryTankUpgrade implements Container
     public void clearContent () { }
 
     public boolean canAddUpgrade (@NotNull ItemStack item) {
-        return tank != null && BlockEntityTank.upgradeApplies(item)
+        return tank != null && tank.acceptsUpgrades() && BlockEntityTank.upgradeApplies(item)
             && tank.upgrades().canAddUpgrade(item) && tank.upgradeFitsContents(item);
     }
 
