@@ -114,8 +114,7 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
         return putItems(level, pos, player);
     }
 
-    // Vanilla skips the whole block interaction when a player sneaks with a full hand, so the
-    // loaders call this directly from their right-click events to make shift-insert work.
+    // Right-click puts the held stack in; sneak is the take modifier, matching Storage Drawers.
     public InteractionResult putItems (Level level, BlockPos pos, Player player) {
         ItemStack stack = player.getItemInHand(InteractionHand.MAIN_HAND);
         if (stack.isEmpty())
@@ -134,16 +133,7 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
         if (!pool.isEmpty() && !ItemStack.isSameItemSameComponents(pool.prototype, stack))
             return InteractionResult.FAIL;
 
-        // sneaking dumps every matching stack in the inventory, like a drawer
         int moved = insert(drawer, pool, stack);
-        if (player.isShiftKeyDown()) {
-            for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-                ItemStack other = player.getInventory().getItem(i);
-                if (other != stack && !other.isEmpty() && ItemStack.isSameItemSameComponents(pool.prototype, other))
-                    moved += insert(drawer, pool, other);
-            }
-        }
-
         if (moved <= 0)
             return InteractionResult.FAIL;
 

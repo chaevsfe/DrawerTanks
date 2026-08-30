@@ -67,23 +67,6 @@ public class DrawerTanksNeoForge
         modEventBus.addListener(this::buildCreativeTabs);
 
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(
-            (net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock event) -> {
-                if (event.getHand() != InteractionHand.MAIN_HAND || !event.getEntity().isShiftKeyDown()
-                    || event.getItemStack().isEmpty())
-                    return;
-
-                var state = event.getLevel().getBlockState(event.getPos());
-                if (!(state.getBlock() instanceof com.chaevsfe.drawertanks.block.BlockLinkedDrawer block))
-                    return;
-
-                var result = block.putItems(event.getLevel(), event.getPos(), event.getEntity());
-                if (result.consumesAction()) {
-                    event.setCanceled(true);
-                    event.setCancellationResult(result);
-                }
-            });
-
-        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(
             (net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock event) -> {
                 var state = event.getLevel().getBlockState(event.getPos());
                 if (state.getBlock() instanceof com.chaevsfe.drawertanks.block.BlockLinkedDrawer block
@@ -91,7 +74,7 @@ public class DrawerTanksNeoForge
                     event.setCanceled(true);
                     if (!event.getLevel().isClientSide()
                         && event.getAction() == net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock.Action.START)
-                        block.takeItem(event.getLevel(), event.getPos(), event.getEntity(), event.getEntity().isShiftKeyDown());
+                        block.takeItem(event.getLevel(), event.getPos(), event.getEntity(), !event.getEntity().isShiftKeyDown());
                 }
             });
 
