@@ -23,11 +23,16 @@ public class ContainerTank extends AbstractContainerMenu
     private static final int HotbarY = 175;
     private static final int UpgradeX = 26;
     private static final int UpgradeY = 86;
+    private static final int DisplayX = 80;
+    private static final int DisplayY = 38;
 
     @Nullable
     private final UpgradeHost tank;
     private final InventoryTankUpgrade upgradeInventory;
     private final List<Slot> upgradeSlots = new ArrayList<>();
+
+    @Nullable
+    private Slot displaySlot;
 
     public ContainerTank (int windowId, Inventory playerInv, Optional<PositionContent> content) {
         this(windowId, playerInv, resolveHost(playerInv, content));
@@ -57,6 +62,75 @@ public class ContainerTank extends AbstractContainerMenu
 
         for (int i = 0; i < 9; i++)
             addSlot(new Slot(playerInventory, i, InventoryX + i * 18, HotbarY));
+
+        // a linked drawer shows what its channel holds where a tank has its gauge; added last so the
+        // quick-move ranges above keep their indices, and inert so nothing can be taken from it
+        if (tank instanceof com.chaevsfe.drawertanks.block.tile.BlockEntityLinkedDrawer drawer) {
+            displaySlot = addSlot(new Slot(new DisplayContainer(drawer), 0, DisplayX, DisplayY)
+            {
+                @Override
+                public boolean mayPlace (@NotNull ItemStack stack) {
+                    return false;
+                }
+
+                @Override
+                public boolean mayPickup (@NotNull Player player) {
+                    return false;
+                }
+            });
+        }
+    }
+
+    @Nullable
+    public Slot getDisplaySlot () {
+        return displaySlot;
+    }
+
+    // read-only view of the channel's stored item, so vanilla renders it for us
+    private record DisplayContainer(com.chaevsfe.drawertanks.block.tile.BlockEntityLinkedDrawer drawer) implements net.minecraft.world.Container
+    {
+        @Override
+        public int getContainerSize () {
+            return 1;
+        }
+
+        @Override
+        public boolean isEmpty () {
+            return drawer.displayItem().isEmpty();
+        }
+
+        @Override
+        @NotNull
+        public ItemStack getItem (int slot) {
+            ItemStack stored = drawer.displayItem();
+            return stored.isEmpty() ? ItemStack.EMPTY : stored.copyWithCount(1);
+        }
+
+        @Override
+        @NotNull
+        public ItemStack removeItem (int slot, int count) {
+            return ItemStack.EMPTY;
+        }
+
+        @Override
+        @NotNull
+        public ItemStack removeItemNoUpdate (int slot) {
+            return ItemStack.EMPTY;
+        }
+
+        @Override
+        public void setItem (int slot, @NotNull ItemStack stack) { }
+
+        @Override
+        public void setChanged () { }
+
+        @Override
+        public boolean stillValid (@NotNull Player player) {
+            return true;
+        }
+
+        @Override
+        public void clearContent () { }
     }
 
     @Nullable

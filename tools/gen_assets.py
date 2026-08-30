@@ -275,6 +275,17 @@ def make_gui(sd_res):
     return img
 
 
+def make_drawer_gui(sd_res):
+    """Same panel as the tank GUI but with no fluid gauge; the linked drawer shows an item slot."""
+    img = Image.open(os.path.join(sd_res, "assets/storagedrawers/textures/gui/drawers_1.png")).convert("RGBA")
+    px = img.load()
+    panel = (198, 198, 198, 255)
+    for y in range(16, 74):
+        for x in range(8, 168):
+            px[x, y] = panel
+    return img
+
+
 def framed_block_model():
     model = block_model("oak")
     model["render_type"] = "minecraft:cutout_mipped"
@@ -518,6 +529,7 @@ def main():
 
     os.makedirs(os.path.join(a, "textures/gui"), exist_ok=True)
     make_gui(sd_res).save(os.path.join(a, "textures/gui/tank.png"))
+    make_drawer_gui(sd_res).save(os.path.join(a, "textures/gui/linked_drawer.png"))
 
     if len(sys.argv) > 3:
         load_ender_tex(sys.argv[3])

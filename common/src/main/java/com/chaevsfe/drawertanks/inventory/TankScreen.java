@@ -19,6 +19,7 @@ import net.minecraft.world.inventory.Slot;
 public class TankScreen extends AbstractContainerScreen<ContainerTank>
 {
     private static final Identifier BACKGROUND = ModConstants.loc("textures/gui/tank.png");
+    private static final Identifier DRAWER_BACKGROUND = ModConstants.loc("textures/gui/linked_drawer.png");
 
     private static final int GAUGE_X = 80;
     private static final int GAUGE_Y = 18;
@@ -40,12 +41,17 @@ public class TankScreen extends AbstractContainerScreen<ContainerTank>
 
         int guiX = (width - imageWidth) / 2;
         int guiY = (height - imageHeight) / 2;
-        graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND, guiX, guiY, 0, 0, imageWidth, imageHeight, 256, 256);
+        Identifier background = menu.getTank() instanceof BlockEntityTank ? BACKGROUND : DRAWER_BACKGROUND;
+        graphics.blit(RenderPipelines.GUI_TEXTURED, background, guiX, guiY, 0, 0, imageWidth, imageHeight, 256, 256);
 
         for (Slot slot : menu.getUpgradeSlots()) {
             if (slot.container instanceof InventoryTankUpgrade upgrades && upgrades.slotIsLocked(slot.getContainerSlot()))
-                graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND, guiX + slot.x, guiY + slot.y, 176, 0, 16, 16, 256, 256);
+                graphics.blit(RenderPipelines.GUI_TEXTURED, background, guiX + slot.x, guiY + slot.y, 176, 0, 16, 16, 256, 256);
         }
+
+        net.minecraft.world.inventory.Slot display = menu.getDisplaySlot();
+        if (display != null)
+            graphics.blit(RenderPipelines.GUI_TEXTURED, background, guiX + display.x - 1, guiY + display.y - 1, 176, 0, 18, 18, 256, 256);
 
         extractFluid(graphics, guiX, guiY);
         extractTicks(graphics, guiX, guiY);
@@ -131,14 +137,13 @@ public class TankScreen extends AbstractContainerScreen<ContainerTank>
         if (!(menu.getTank() instanceof com.chaevsfe.drawertanks.block.tile.BlockEntityLinkedDrawer drawer))
             return;
 
-        net.minecraft.world.item.ItemStack stored = drawer.displayItem();
-        if (stored.isEmpty()) {
-            drawRight(graphics, I18n.get("tooltip.drawertanks.empty"), 42);
+        if (drawer.displayItem().isEmpty()) {
+            graphics.centeredText(this.font, I18n.get("tooltip.drawertanks.empty"), 88, 60, 0xFF404040);
             return;
         }
 
-        drawRight(graphics, stored.getHoverName().getString(), 32);
-        drawRight(graphics, compact(drawer.displayCount()) + " / " + compact(drawer.capacityItems()), 44);
+        String label = compact(drawer.displayCount()) + " / " + compact(drawer.capacityItems());
+        graphics.centeredText(this.font, label, 88, 60, 0xFF404040);
     }
 
     private void drawRight (GuiGraphicsExtractor graphics, String text, int y) {
