@@ -1,8 +1,11 @@
 package com.chaevsfe.drawertanks.core;
 
 import com.chaevsfe.drawertanks.ModConstants;
+import com.chaevsfe.drawertanks.block.BlockFramedTank;
 import com.chaevsfe.drawertanks.block.BlockLinkedTank;
 import com.chaevsfe.drawertanks.block.BlockTank;
+import com.jaquadro.minecraft.storagedrawers.block.meta.BlockMeta;
+import com.jaquadro.minecraft.storagedrawers.block.meta.BlockMetaFacing;
 import com.texelsaurus.minecraft.chameleon.ChameleonServices;
 import com.texelsaurus.minecraft.chameleon.api.ChameleonInit;
 import com.texelsaurus.minecraft.chameleon.registry.ChameleonRegistry;
@@ -40,6 +43,24 @@ public final class ModBlocks
             .strength(10f, 600f)
             .sound(SoundType.WOOD)
             .setId(ResourceKey.create(Registries.BLOCK, ModConstants.loc("linked_tank")))));
+
+    public static final List<String> EXCLUDE_ITEMS = new ArrayList<>();
+
+    public static final RegistryEntry<BlockFramedTank> FRAMED_TANK = BLOCKS.register("framed_tank",
+        () -> new BlockFramedTank(Properties.of()
+            .mapColor(MapColor.WOOD)
+            .strength(2.5f)
+            .sound(SoundType.WOOD)
+            .noOcclusion()
+            .setId(ResourceKey.create(Registries.BLOCK, ModConstants.loc("framed_tank")))));
+
+    public static final RegistryEntry<BlockMeta> META_TANK_SIDE = registerMetaFacingBlock("meta_tank_side");
+
+    private static RegistryEntry<BlockMeta> registerMetaFacingBlock (String name) {
+        EXCLUDE_ITEMS.add(name);
+        return BLOCKS.register(name, () -> new BlockMetaFacing(Properties.of().air()
+            .setId(ResourceKey.create(Registries.BLOCK, ModConstants.loc(name)))));
+    }
 
     private ModBlocks () { }
 

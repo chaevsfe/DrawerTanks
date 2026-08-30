@@ -21,6 +21,11 @@ public class BlockLinkedTank extends BlockTank
     }
 
     @Override
+    public net.minecraft.world.item.ItemStack makeFramedItem (net.minecraft.world.item.ItemStack source, net.minecraft.world.item.ItemStack matSide, net.minecraft.world.item.ItemStack matTrim, net.minecraft.world.item.ItemStack matFront) {
+        return net.minecraft.world.item.ItemStack.EMPTY;
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker (Level level, BlockState state, BlockEntityType<T> type) {
         if (level.isClientSide() || type != ModBlockEntities.LINKED_TANK.get())

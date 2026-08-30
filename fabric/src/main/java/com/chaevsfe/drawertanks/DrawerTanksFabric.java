@@ -46,10 +46,12 @@ public class DrawerTanksFabric implements ModInitializer
 
         FluidStorage.SIDED.registerForBlockEntity((be, dir) -> TankFluidStorage.of(be), ModBlockEntities.TANK.get());
         FluidStorage.SIDED.registerForBlockEntity((be, dir) -> TankFluidStorage.of(be), ModBlockEntities.LINKED_TANK.get());
+        FluidStorage.SIDED.registerForBlockEntity((be, dir) -> TankFluidStorage.of(be), ModBlockEntities.FRAMED_TANK.get());
 
         IFabricCapability<IDrawerAttributes> attributesCapability = (IFabricCapability<IDrawerAttributes>) Capabilities.DRAWER_ATTRIBUTES;
         attributesCapability.register(ModBlockEntities.TANK.get(), be -> be.getDrawerAttributes());
         attributesCapability.register(ModBlockEntities.LINKED_TANK.get(), be -> be.getDrawerAttributes());
+        attributesCapability.register(ModBlockEntities.FRAMED_TANK.get(), be -> be.getDrawerAttributes());
 
         Bridges.FLUID = new FluidBridge()
         {

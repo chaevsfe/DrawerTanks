@@ -1,10 +1,19 @@
 package com.chaevsfe.drawertanks.client;
 
 import com.chaevsfe.drawertanks.ModConstants;
+import com.chaevsfe.drawertanks.client.model.TankMaterialDecorator;
 import com.chaevsfe.drawertanks.client.renderer.BlockEntityTankRenderer;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
+import com.chaevsfe.drawertanks.core.ModBlocks;
 import com.chaevsfe.drawertanks.core.ModContainers;
 import com.chaevsfe.drawertanks.inventory.TankScreen;
+import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.FramedModelProperties;
+import com.jaquadro.minecraft.storagedrawers.client.model.ItemModelStore;
+import com.jaquadro.minecraft.storagedrawers.client.model.PlatformDecoratedModel;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
+import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.neoforge.client.event.ModelEvent;
 import com.chaevsfe.drawertanks.platform.Bridges;
 import com.chaevsfe.drawertanks.platform.ClientFluidBridge;
 import net.minecraft.client.Minecraft;
@@ -32,6 +41,20 @@ public class ClientModBusSubscriber
     @SubscribeEvent
     public static void registerMenuScreens (RegisterMenuScreensEvent event) {
         event.register(ModContainers.TANK_CONTAINER.get(), TankScreen::new);
+    }
+
+    // LOW priority so SD's default-priority handler has already cleared ItemModelStore
+    @SubscribeEvent(priority = EventPriority.LOW)
+    public static void registerModels (ModelEvent.ModifyBakingResult event) {
+        for (BlockState state : ModBlocks.FRAMED_TANK.get().getStateDefinition().getPossibleStates()) {
+            BlockStateModel original = event.getBakingResult().blockStateModels().get(state);
+            if (original == null || original instanceof PlatformDecoratedModel)
+                continue;
+
+            BlockStateModel proxy = new PlatformDecoratedModel<>(original, new TankMaterialDecorator(), FramedModelProperties.INSTANCE);
+            ItemModelStore.models.put(state, proxy);
+            event.getBakingResult().blockStateModels().put(state, proxy);
+        }
     }
 
     @SubscribeEvent

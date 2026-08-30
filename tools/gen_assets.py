@@ -212,6 +212,54 @@ def make_gui(sd_res):
     return img
 
 
+def framed_block_model():
+    model = block_model("oak")
+    model["render_type"] = "minecraft:cutout_mipped"
+    model["textures"] = {
+        "particle": "drawertanks:block/tank_raw_front",
+        "front": "drawertanks:block/tank_raw_front",
+        "interior": "drawertanks:block/tank_interior"
+    }
+    model["elements"][0]["faces"] = {
+        "north": {"uv": [0, 0, 16, 16], "texture": "#front", "cullface": "north"}
+    }
+    return model
+
+
+def meta_tank_sides_model():
+    mat = "storagedrawers:block/base/base_oak"
+
+    def cull(face):
+        return {"uv": [0, 0, 16, 16], "texture": "#mat", "cullface": face}
+
+    return {
+        "render_type": "minecraft:cutout_mipped",
+        "textures": {"particle": mat, "mat": mat},
+        "elements": [
+            {"from": [0, 0, 0], "to": [16, 16, 16], "faces": {
+                "south": cull("south"), "east": cull("east"), "west": cull("west"),
+                "up": cull("up"), "down": cull("down")}},
+            {"from": [0, 13, 0], "to": [16, 16, 0],
+             "faces": {"north": {"uv": [0, 0, 16, 3], "texture": "#mat", "cullface": "north"}}},
+            {"from": [0, 0, 0], "to": [16, 3, 0],
+             "faces": {"north": {"uv": [0, 13, 16, 16], "texture": "#mat", "cullface": "north"}}},
+            {"from": [0, 3, 0], "to": [3, 13, 0],
+             "faces": {"north": {"uv": [13, 3, 16, 13], "texture": "#mat", "cullface": "north"}}},
+            {"from": [13, 3, 0], "to": [16, 13, 0],
+             "faces": {"north": {"uv": [0, 3, 3, 13], "texture": "#mat", "cullface": "north"}}}
+        ]
+    }
+
+
+def facing_blockstate(model):
+    return {"variants": {
+        "facing=north": {"model": model},
+        "facing=east": {"model": model, "y": 90},
+        "facing=south": {"model": model, "y": 180},
+        "facing=west": {"model": model, "y": 270}
+    }}
+
+
 def linked_block_model():
     model = block_model("dark_oak")
     model["textures"] = {
@@ -415,6 +463,17 @@ def main():
     })
     write_json(os.path.join(d, "loot_table/blocks/linked_tank.json"), loot_table("linked"))
 
+    raw_side = Image.open(os.path.join(sd_tex, "drawers_raw_side.png"))
+    make_front(raw_side).save(os.path.join(a, "textures/block/tank_raw_front.png"))
+    write_json(os.path.join(a, "models/block/framed_tank.json"), framed_block_model())
+    write_json(os.path.join(a, "blockstates/framed_tank.json"), facing_blockstate("drawertanks:block/framed_tank"))
+    write_json(os.path.join(a, "items/framed_tank.json"),
+               {"model": {"type": "storagedrawers:framed_block", "model": "drawertanks:framed_tank", "variant": "facing=north"}})
+    write_json(os.path.join(a, "models/block/framed/tank_sides.json"), meta_tank_sides_model())
+    write_json(os.path.join(a, "blockstates/meta_tank_side.json"), facing_blockstate("drawertanks:block/framed/tank_sides"))
+
+    lang["block.drawertanks.framed_tank"] = "Framed Tank"
+    lang["block.drawertanks.meta_tank_side"] = "Tank Side"
     lang["block.drawertanks.linked_tank"] = "Linked Tank"
     lang["item.drawertanks.tank_coupler"] = "Tank Coupler"
     lang["message.drawertanks.coupler.source_selected"] = "Source selected, now use the coupler on the tank that should receive the fluid"

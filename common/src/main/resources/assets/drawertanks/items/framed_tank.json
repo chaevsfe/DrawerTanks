@@ -1,0 +1,7 @@
+{
+    "model": {
+        "type": "storagedrawers:framed_block",
+        "model": "drawertanks:framed_tank",
+        "variant": "facing=north"
+    }
+}

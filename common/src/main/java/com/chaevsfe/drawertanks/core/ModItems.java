@@ -1,7 +1,9 @@
 package com.chaevsfe.drawertanks.core;
 
 import com.chaevsfe.drawertanks.ModConstants;
+import com.chaevsfe.drawertanks.block.BlockFramedTank;
 import com.chaevsfe.drawertanks.block.BlockTank;
+import com.chaevsfe.drawertanks.item.ItemFramedTank;
 import com.chaevsfe.drawertanks.item.ItemTank;
 import com.chaevsfe.drawertanks.item.ItemTankCoupler;
 import com.texelsaurus.minecraft.chameleon.ChameleonServices;
@@ -28,8 +30,11 @@ public final class ModItems
             .setId(modKey(ModConstants.loc("tank_coupler")))));
 
     public static void init (ChameleonInit.InitContext context) {
-        for (RegistryEntry<Block> ro : ModBlocks.BLOCKS.getEntries())
+        for (RegistryEntry<Block> ro : ModBlocks.BLOCKS.getEntries()) {
+            if (ModBlocks.EXCLUDE_ITEMS.contains(ro.getId().getPath()))
+                continue;
             registerBlock(ro);
+        }
 
         ITEMS.init(context);
     }
@@ -40,6 +45,8 @@ public final class ModItems
             Item.Properties itemProperties = new Item.Properties()
                 .useBlockDescriptionPrefix()
                 .setId(modKey(blockHolder.getId()));
+            if (block instanceof BlockFramedTank)
+                return new ItemFramedTank(block, itemProperties);
             if (block instanceof BlockTank)
                 return new ItemTank(block, itemProperties);
             return new BlockItem(block, itemProperties);

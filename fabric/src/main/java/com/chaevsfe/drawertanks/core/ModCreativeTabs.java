@@ -1,5 +1,6 @@
 package com.chaevsfe.drawertanks.core;
 
+import com.chaevsfe.drawertanks.item.ItemFramedTank;
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
@@ -14,6 +15,9 @@ public class ModCreativeTabs
 
     public static void init () {
         CreativeModeTabEvents.modifyOutputEvent(SD_TAB).register(output ->
-            ModItems.ITEMS.getEntries().forEach(reg -> output.accept(new ItemStack(reg.get()))));
+            ModItems.ITEMS.getEntries().forEach(reg -> {
+                if (!(reg.get() instanceof ItemFramedTank))
+                    output.accept(new ItemStack(reg.get()));
+            }));
     }
 }

@@ -1,0 +1,169 @@
+{
+    "render_type": "minecraft:cutout_mipped",
+    "textures": {
+        "particle": "storagedrawers:block/base/base_oak",
+        "mat": "storagedrawers:block/base/base_oak"
+    },
+    "elements": [
+        {
+            "from": [
+                0,
+                0,
+                0
+            ],
+            "to": [
+                16,
+                16,
+                16
+            ],
+            "faces": {
+                "south": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        16
+                    ],
+                    "texture": "#mat",
+                    "cullface": "south"
+                },
+                "east": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        16
+                    ],
+                    "texture": "#mat",
+                    "cullface": "east"
+                },
+                "west": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        16
+                    ],
+                    "texture": "#mat",
+                    "cullface": "west"
+                },
+                "up": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        16
+                    ],
+                    "texture": "#mat",
+                    "cullface": "up"
+                },
+                "down": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        16
+                    ],
+                    "texture": "#mat",
+                    "cullface": "down"
+                }
+            }
+        },
+        {
+            "from": [
+                0,
+                13,
+                0
+            ],
+            "to": [
+                16,
+                16,
+                0
+            ],
+            "faces": {
+                "north": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        3
+                    ],
+                    "texture": "#mat",
+                    "cullface": "north"
+                }
+            }
+        },
+        {
+            "from": [
+                0,
+                0,
+                0
+            ],
+            "to": [
+                16,
+                3,
+                0
+            ],
+            "faces": {
+                "north": {
+                    "uv": [
+                        0,
+                        13,
+                        16,
+                        16
+                    ],
+                    "texture": "#mat",
+                    "cullface": "north"
+                }
+            }
+        },
+        {
+            "from": [
+                0,
+                3,
+                0
+            ],
+            "to": [
+                3,
+                13,
+                0
+            ],
+            "faces": {
+                "north": {
+                    "uv": [
+                        13,
+                        3,
+                        16,
+                        13
+                    ],
+                    "texture": "#mat",
+                    "cullface": "north"
+                }
+            }
+        },
+        {
+            "from": [
+                13,
+                3,
+                0
+            ],
+            "to": [
+                16,
+                13,
+                0
+            ],
+            "faces": {
+                "north": {
+                    "uv": [
+                        0,
+                        3,
+                        3,
+                        13
+                    ],
+                    "texture": "#mat",
+                    "cullface": "north"
+                }
+            }
+        }
+    ]
+}

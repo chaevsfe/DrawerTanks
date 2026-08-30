@@ -1,0 +1,150 @@
+{
+    "parent": "block/block",
+    "textures": {
+        "particle": "drawertanks:block/tank_raw_front",
+        "front": "drawertanks:block/tank_raw_front",
+        "interior": "drawertanks:block/tank_interior"
+    },
+    "elements": [
+        {
+            "from": [
+                0,
+                0,
+                0
+            ],
+            "to": [
+                16,
+                16,
+                16
+            ],
+            "faces": {
+                "north": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        16
+                    ],
+                    "texture": "#front",
+                    "cullface": "north"
+                }
+            }
+        },
+        {
+            "from": [
+                3,
+                3,
+                3
+            ],
+            "to": [
+                13,
+                13,
+                3
+            ],
+            "faces": {
+                "north": {
+                    "uv": [
+                        3,
+                        3,
+                        13,
+                        13
+                    ],
+                    "texture": "#interior"
+                }
+            }
+        },
+        {
+            "from": [
+                3,
+                3,
+                0
+            ],
+            "to": [
+                3,
+                13,
+                3
+            ],
+            "faces": {
+                "east": {
+                    "uv": [
+                        13,
+                        3,
+                        16,
+                        13
+                    ],
+                    "texture": "#interior"
+                }
+            }
+        },
+        {
+            "from": [
+                13,
+                3,
+                0
+            ],
+            "to": [
+                13,
+                13,
+                3
+            ],
+            "faces": {
+                "west": {
+                    "uv": [
+                        0,
+                        3,
+                        3,
+                        13
+                    ],
+                    "texture": "#interior"
+                }
+            }
+        },
+        {
+            "from": [
+                3,
+                3,
+                0
+            ],
+            "to": [
+                13,
+                3,
+                3
+            ],
+            "faces": {
+                "up": {
+                    "uv": [
+                        3,
+                        0,
+                        13,
+                        3
+                    ],
+                    "texture": "#interior"
+                }
+            }
+        },
+        {
+            "from": [
+                3,
+                13,
+                0
+            ],
+            "to": [
+                13,
+                13,
+                3
+            ],
+            "faces": {
+                "down": {
+                    "uv": [
+                        3,
+                        13,
+                        13,
+                        16
+                    ],
+                    "texture": "#interior"
+                }
+            }
+        }
+    ],
+    "render_type": "minecraft:cutout_mipped"
+}

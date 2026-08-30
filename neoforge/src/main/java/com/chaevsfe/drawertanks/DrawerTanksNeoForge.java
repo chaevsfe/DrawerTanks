@@ -41,6 +41,8 @@ public class DrawerTanksNeoForge
         Identifier.fromNamespaceAndPath("storagedrawers", "storagedrawers"));
 
     public DrawerTanksNeoForge (ModContainer modContainer, IEventBus modEventBus) {
+        Bridges.FRAMED_TANK_FACTORY = com.chaevsfe.drawertanks.block.tile.NeoforgeBlockEntityFramedTank::new;
+
         modContainer.registerConfig(ModConfig.Type.COMMON, NeoforgeTankConfig.SPEC, "drawertanks-common.toml");
         modEventBus.addListener((ModConfigEvent event) -> {
             if (event.getConfig().getSpec() == NeoforgeTankConfig.SPEC)
@@ -77,11 +79,14 @@ public class DrawerTanksNeoForge
     private void registerCapabilities (RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(Capabilities.Fluid.BLOCK, ModBlockEntities.TANK.get(), (be, side) -> TankResourceHandler.of(be));
         event.registerBlockEntity(Capabilities.Fluid.BLOCK, ModBlockEntities.LINKED_TANK.get(), (be, side) -> TankResourceHandler.of(be));
+        event.registerBlockEntity(Capabilities.Fluid.BLOCK, ModBlockEntities.FRAMED_TANK.get(), (be, side) -> TankResourceHandler.of(be));
 
         DrawerTanksNeoForge.<IDrawerAttributes, Object>cast(com.jaquadro.minecraft.storagedrawers.capabilities.Capabilities.DRAWER_ATTRIBUTES)
             .register(event, ModBlockEntities.TANK.get(), (e, c) -> e.getDrawerAttributes());
         DrawerTanksNeoForge.<IDrawerAttributes, Object>cast(com.jaquadro.minecraft.storagedrawers.capabilities.Capabilities.DRAWER_ATTRIBUTES)
             .register(event, ModBlockEntities.LINKED_TANK.get(), (e, c) -> e.getDrawerAttributes());
+        DrawerTanksNeoForge.<IDrawerAttributes, Object>cast(com.jaquadro.minecraft.storagedrawers.capabilities.Capabilities.DRAWER_ATTRIBUTES)
+            .register(event, ModBlockEntities.FRAMED_TANK.get(), (e, c) -> e.getDrawerAttributes());
     }
 
     @SuppressWarnings("unchecked")
@@ -93,6 +98,9 @@ public class DrawerTanksNeoForge
         if (!event.getTabKey().equals(SD_TAB))
             return;
 
-        ModItems.ITEMS.getEntries().forEach(reg -> event.accept(reg.get()));
+        ModItems.ITEMS.getEntries().forEach(reg -> {
+            if (!(reg.get() instanceof com.chaevsfe.drawertanks.item.ItemFramedTank))
+                event.accept(reg.get());
+        });
     }
 }

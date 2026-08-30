@@ -2,7 +2,10 @@ package com.chaevsfe.drawertanks.block;
 
 import com.chaevsfe.drawertanks.block.tile.BlockEntityTank;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
+import com.chaevsfe.drawertanks.core.ModBlocks;
 import com.chaevsfe.drawertanks.platform.Bridges;
+import com.jaquadro.minecraft.storagedrawers.api.framing.IFramedSourceBlock;
+import com.jaquadro.minecraft.storagedrawers.block.tile.util.FrameHelper;
 import com.jaquadro.minecraft.storagedrawers.item.ItemUpgrade;
 import com.mojang.serialization.MapCodec;
 import com.texelsaurus.minecraft.chameleon.inventory.ContentMenuProvider;
@@ -28,7 +31,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BlockTank extends HorizontalDirectionalBlock implements EntityBlock
+public class BlockTank extends HorizontalDirectionalBlock implements EntityBlock, IFramedSourceBlock
 {
     public static final MapCodec<BlockTank> CODEC = simpleCodec(BlockTank::new);
 
@@ -60,10 +63,15 @@ public class BlockTank extends HorizontalDirectionalBlock implements EntityBlock
     @Override
     @SuppressWarnings("unchecked")
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker (Level level, BlockState state, BlockEntityType<T> type) {
-        if (level.isClientSide() || type != ModBlockEntities.TANK.get())
+        if (level.isClientSide() || (type != ModBlockEntities.TANK.get() && type != ModBlockEntities.FRAMED_TANK.get()))
             return null;
 
         return (lvl, pos, st, be) -> BlockEntityTank.serverTick(lvl, pos, st, (BlockEntityTank) be);
+    }
+
+    @Override
+    public ItemStack makeFramedItem (ItemStack source, ItemStack matSide, ItemStack matTrim, ItemStack matFront) {
+        return FrameHelper.makeFramedItem(ModBlocks.FRAMED_TANK.get(), source, matSide, matTrim, matFront);
     }
 
     @Override
