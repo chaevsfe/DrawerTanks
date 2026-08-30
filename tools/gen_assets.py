@@ -175,11 +175,24 @@ def make_linked_front(side_img):
 
 
 def make_linked_drawer_front(side_img, sd_res):
+    # ender body with the drawer face treatment: an indented panel bevel, SD's shading, and the handle
     img = make_linked_side(side_img)
-    handle_path = os.path.join(sd_res, "assets/storagedrawers/textures/block/overlay/handle_1.png")
-    if os.path.exists(handle_path):
-        handle = Image.open(handle_path).convert("RGBA")
-        img = Image.alpha_composite(img, handle)
+    px = img.load()
+    for y in range(2, 14):
+        for x in range(2, 14):
+            edge_light = x == 2 or y == 2
+            edge_dark = (x == 13 or y == 13) and not edge_light
+            p = px[x, y]
+            if edge_light:
+                px[x, y] = (min(255, p[0] + 26), min(255, p[1] + 30), min(255, p[2] + 30), 255)
+            elif edge_dark:
+                px[x, y] = (max(0, p[0] - 8), max(0, p[1] - 12), max(0, p[2] - 12), 255)
+            else:
+                px[x, y] = (max(0, p[0] - 4), max(0, p[1] - 6), max(0, p[2] - 6), 255)
+    for overlay_name in ("overlay/shading_1.png", "overlay/handle_1.png"):
+        path = os.path.join(sd_res, "assets/storagedrawers/textures/block", overlay_name)
+        if os.path.exists(path):
+            img = Image.alpha_composite(img, Image.open(path).convert("RGBA"))
     return img
 
 

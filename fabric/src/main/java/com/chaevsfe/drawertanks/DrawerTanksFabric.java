@@ -55,7 +55,9 @@ public class DrawerTanksFabric implements ModInitializer
         ItemStorage.SIDED.registerForBlockEntity((be, dir) -> LinkedDrawerItemStorage.of(be), ModBlockEntities.LINKED_DRAWER.get());
 
         AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
-            if (world.getBlockState(pos).getBlock() instanceof BlockLinkedDrawer block) {
+            var state = world.getBlockState(pos);
+            if (state.getBlock() instanceof BlockLinkedDrawer block
+                && direction == state.getValue(BlockLinkedDrawer.FACING)) {
                 if (!world.isClientSide())
                     block.takeItem(world, pos, player, player.isShiftKeyDown());
                 return InteractionResult.SUCCESS;

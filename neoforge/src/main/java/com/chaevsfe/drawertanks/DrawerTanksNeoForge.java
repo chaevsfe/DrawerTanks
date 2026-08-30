@@ -62,7 +62,9 @@ public class DrawerTanksNeoForge
 
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(
             (net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock event) -> {
-                if (event.getLevel().getBlockState(event.getPos()).getBlock() instanceof com.chaevsfe.drawertanks.block.BlockLinkedDrawer block) {
+                var state = event.getLevel().getBlockState(event.getPos());
+                if (state.getBlock() instanceof com.chaevsfe.drawertanks.block.BlockLinkedDrawer block
+                    && event.getFace() == state.getValue(com.chaevsfe.drawertanks.block.BlockLinkedDrawer.FACING)) {
                     event.setCanceled(true);
                     if (!event.getLevel().isClientSide()
                         && event.getAction() == net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock.Action.START)
