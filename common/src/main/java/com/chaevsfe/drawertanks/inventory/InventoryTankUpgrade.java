@@ -52,8 +52,10 @@ public class InventoryTankUpgrade implements Container
     @NotNull
     public ItemStack removeItem (int slot, int count) {
         ItemStack stack = getItem(slot).copy();
-        if (count > 0 && tank != null)
+        if (count > 0 && tank != null) {
             tank.upgrades().setUpgrade(slot, ItemStack.EMPTY);
+            tank.refreshUpgradeMirror();
+        }
         return stack;
     }
 
@@ -65,8 +67,10 @@ public class InventoryTankUpgrade implements Container
 
     @Override
     public void setItem (int slot, @NotNull ItemStack item) {
-        if (tank != null)
+        if (tank != null) {
             tank.upgrades().setUpgrade(slot, item);
+            tank.refreshUpgradeMirror();
+        }
     }
 
     @Override

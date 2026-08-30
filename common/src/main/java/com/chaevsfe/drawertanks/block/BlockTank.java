@@ -90,6 +90,7 @@ public class BlockTank extends HorizontalDirectionalBlock implements EntityBlock
                 return InteractionResult.SUCCESS;
 
             if (tank.upgrades().addUpgrade(stack)) {
+                tank.refreshUpgradeMirror();
                 if (!player.hasInfiniteMaterials())
                     stack.shrink(1);
                 return InteractionResult.SUCCESS;

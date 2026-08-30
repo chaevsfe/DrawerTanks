@@ -108,6 +108,13 @@ public class BlockEntityLinkedTank extends BlockEntityTank
     }
 
     @Override
+    public void refreshUpgradeMirror () {
+        LinkedChannels.Pool pool = pool();
+        if (pool != null)
+            mirrorUpgrades(pool.upgrades);
+    }
+
+    @Override
     public long capacityDroplets () {
         LinkedChannels.Pool pool = pool();
         if (pool != null)

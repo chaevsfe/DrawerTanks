@@ -157,6 +157,10 @@ public class BlockEntityTank extends BaseBlockEntity
         return target;
     }
 
+    // Called the moment upgrades change, so the block's copy is never stale between the change and
+    // the next tick; a plain tank already stores them locally and has nothing to do.
+    public void refreshUpgradeMirror () { }
+
     // A linked tank's real upgrades live on its channel, but the block's own list is what gets
     // written into the update packet, so keep it as a mirror or the client sees empty slots.
     protected void mirrorUpgrades (UpgradeData source) {
