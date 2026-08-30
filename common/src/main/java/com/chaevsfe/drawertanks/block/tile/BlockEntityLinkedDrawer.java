@@ -77,6 +77,17 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity
         return true;
     }
 
+    // pooled items stay in the channel; only the channel itself travels with the item
+    @Override
+    protected void collectImplicitComponents (net.minecraft.core.component.DataComponentMap.Builder builder) {
+        LinkedChannelData.collect(builder, channels);
+    }
+
+    @Override
+    protected void applyImplicitComponents (net.minecraft.core.component.DataComponentGetter input) {
+        LinkedChannelData.apply(input, channels);
+    }
+
     public LinkedItemChannels.Pool pool () {
         if (!(getLevel() instanceof ServerLevel serverLevel))
             return null;

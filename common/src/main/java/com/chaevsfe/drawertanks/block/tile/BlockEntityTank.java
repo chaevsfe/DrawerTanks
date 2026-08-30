@@ -151,6 +151,11 @@ public class BlockEntityTank extends BaseBlockEntity
         return target;
     }
 
+    // linked tanks redirect this at the shared pool; the local field is only right for a plain tank
+    protected void onFluidLockChanged (boolean locked) {
+        tankData.setRetainFluid(locked);
+    }
+
     public void onContentsChanged () {
         setChanged();
         if (getLevel() == null || getLevel().isClientSide())
@@ -336,7 +341,7 @@ public class BlockEntityTank extends BaseBlockEntity
     {
         @Override
         protected void onAttributeChanged () {
-            tankData.setRetainFluid(isItemLocked(LockAttribute.LOCK_EMPTY));
+            onFluidLockChanged(isItemLocked(LockAttribute.LOCK_EMPTY));
             if (getLevel() != null && !getLevel().isClientSide())
                 onContentsChanged();
         }

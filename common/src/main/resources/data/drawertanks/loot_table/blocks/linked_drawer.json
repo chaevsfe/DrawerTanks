@@ -11,7 +11,16 @@
             "entries": [
                 {
                     "type": "minecraft:item",
-                    "name": "drawertanks:linked_drawer"
+                    "name": "drawertanks:linked_drawer",
+                    "functions": [
+                        {
+                            "function": "minecraft:copy_components",
+                            "source": "block_entity",
+                            "include": [
+                                "drawertanks:link_channels"
+                            ]
+                        }
+                    ]
                 }
             ],
             "rolls": 1.0

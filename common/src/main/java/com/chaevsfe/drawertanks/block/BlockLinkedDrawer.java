@@ -11,6 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
@@ -132,6 +133,14 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
     public void takeItem (Level level, BlockPos pos, Player player, boolean single) {
         if (level.isClientSide() || !(level.getBlockEntity(pos) instanceof BlockEntityLinkedDrawer drawer))
             return;
+
+        // the loader hooks fire before vanilla's own checks, so gate reach and build permission here
+        if (player instanceof ServerPlayer serverPlayer) {
+            if (!serverPlayer.isWithinBlockInteractionRange(pos, 1.0)
+                || !level.mayInteract(serverPlayer, pos)
+                || serverPlayer.blockActionRestricted(level, pos, serverPlayer.gameMode.getGameModeForPlayer()))
+                return;
+        }
 
         LinkedItemChannels.Pool pool = drawer.pool();
         if (pool == null || pool.isEmpty())

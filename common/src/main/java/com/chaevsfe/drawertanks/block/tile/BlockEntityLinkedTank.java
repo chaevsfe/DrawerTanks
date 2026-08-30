@@ -94,6 +94,18 @@ public class BlockEntityLinkedTank extends BlockEntityTank
     }
 
     @Override
+    protected void onFluidLockChanged (boolean locked) {
+        LinkedChannels.Pool pool = pool();
+        if (pool == null) {
+            super.onFluidLockChanged(locked);
+            return;
+        }
+
+        pool.fluidLocked = locked;
+        pool.data.setRetainFluid(locked);
+    }
+
+    @Override
     public long capacityDroplets () {
         return (long) TankConfig.linkedChannelCapacityBuckets * DROPLETS_PER_BUCKET;
     }
@@ -116,8 +128,13 @@ public class BlockEntityLinkedTank extends BlockEntityTank
     public static void serverTickLinked (Level level, BlockPos pos, BlockState state, BlockEntityLinkedTank tank) {
         LinkedChannels.Pool pool = tank.pool();
         if (pool != null) {
+            // restores the channel lock after a reload; an explicit key use goes through onFluidLockChanged
+            if (tank.isFluidLocked() && !pool.fluidLocked) {
+                pool.fluidLocked = true;
+                pool.data.setRetainFluid(true);
+            }
+
             if (tank.legacyContentsPending) {
-                tank.legacyContentsPending = false;
                 TankData mirror = tank.clientMirror();
                 if (!mirror.isEmpty() && (pool.data.isEmpty() || pool.data.matches(mirror.getFluid(), mirror.getComponents()))) {
                     long space = Math.max(0, tank.capacityDroplets() - pool.data.getAmount());
@@ -125,13 +142,15 @@ public class BlockEntityLinkedTank extends BlockEntityTank
                     if (moved > 0) {
                         pool.data.setFluid(mirror.getFluid(), mirror.getComponents());
                         pool.data.setAmount(pool.data.getAmount() + moved);
+                        mirror.setAmount(mirror.getAmount() - moved);
                         tank.onContentsChanged();
                     }
                 }
-                mirror.clear();
+                // whatever would not fit stays put and retries once the pool drains or matches
+                tank.legacyContentsPending = !mirror.isEmpty();
             }
 
-            if (pool.version != tank.lastSeenVersion) {
+            if (!tank.legacyContentsPending && pool.version != tank.lastSeenVersion) {
                 TankData mirror = tank.clientMirror();
                 mirror.setFluid(pool.data.getFluid(), pool.data.getComponents());
                 mirror.setAmount(pool.data.getAmount());
@@ -147,13 +166,15 @@ public class BlockEntityLinkedTank extends BlockEntityTank
         super.onContentsChanged();
     }
 
-    // channel contents live in the shared pool, not in the block or its dropped item
+    // channel contents live in the shared pool; only the channel itself travels with the item
     @Override
     protected void collectImplicitComponents (net.minecraft.core.component.DataComponentMap.Builder builder) {
+        LinkedChannelData.collect(builder, channels);
     }
 
     @Override
     protected void applyImplicitComponents (net.minecraft.core.component.DataComponentGetter input) {
+        LinkedChannelData.apply(input, channels);
     }
 
     private class LinkData extends BlockEntityDataShim
@@ -178,7 +199,11 @@ public class BlockEntityLinkedTank extends BlockEntityTank
             for (DyeColor color : channels)
                 ids.add(color.getId());
             output.store("Channels", Codec.INT.listOf(), ids);
-            output.store("Mirror", Codec.BOOL, true);
+            // only claim the fold has happened once it actually has, or a non-ticking chunk loses the fluid
+            if (legacyContentsPending)
+                output.discard("Mirror");
+            else
+                output.store("Mirror", Codec.BOOL, true);
             output.discard("Partner");
         }
     }

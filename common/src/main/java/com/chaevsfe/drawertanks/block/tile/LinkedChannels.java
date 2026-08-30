@@ -19,6 +19,7 @@ public class LinkedChannels extends SavedData
     {
         public final TankData data = new TankData();
         public long version;
+        public boolean fluidLocked;
 
         LinkedChannels owner;
         private TankTarget target;
@@ -47,6 +48,11 @@ public class LinkedChannels extends SavedData
                     @Override
                     public void onChanged () {
                         changed();
+                    }
+
+                    @Override
+                    public boolean isFluidLocked () {
+                        return Pool.this.fluidLocked;
                     }
                 };
             }
