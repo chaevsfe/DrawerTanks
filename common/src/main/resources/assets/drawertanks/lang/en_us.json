@@ -20,5 +20,7 @@
     "message.drawertanks.linked.cleared": "Channel colors washed off",
     "tooltip.drawertanks.capacity": "Capacity: %s B",
     "tooltip.drawertanks.contents": "%s: %s / %s B",
-    "tooltip.drawertanks.empty": "Empty"
+    "tooltip.drawertanks.empty": "Empty",
+    "tooltip.drawertanks.sealed": "Contents sealed within",
+    "tooltip.drawertanks.upgrades": "Upgrades: %s"
 }

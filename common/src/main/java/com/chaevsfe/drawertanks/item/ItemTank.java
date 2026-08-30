@@ -1,6 +1,7 @@
 package com.chaevsfe.drawertanks.item;
 
 import com.chaevsfe.drawertanks.block.tile.BlockEntityTank;
+import com.chaevsfe.drawertanks.components.TankAttributesData;
 import com.chaevsfe.drawertanks.components.TankContents;
 import com.chaevsfe.drawertanks.components.TankUpgrades;
 import com.chaevsfe.drawertanks.core.ModDataComponents;
@@ -44,6 +45,25 @@ public class ItemTank extends BlockItem
             tooltip.accept(Component.translatable("tooltip.drawertanks.empty").withStyle(ChatFormatting.GRAY));
             tooltip.accept(Component.translatable("tooltip.drawertanks.capacity", capacityText).withStyle(ChatFormatting.GRAY));
         }
+
+        TankUpgrades upgrades = stack.get(ModDataComponents.TANK_UPGRADES.get());
+        int upgradeCount = upgrades == null ? 0 : upgrades.upgrades().size();
+        if (upgradeCount > 0)
+            tooltip.accept(Component.translatable("tooltip.drawertanks.upgrades", upgradeCount).withStyle(ChatFormatting.GRAY));
+
+        if (hasStoredContents(stack, contents, upgradeCount))
+            tooltip.accept(Component.translatable("tooltip.drawertanks.sealed").withStyle(ChatFormatting.YELLOW));
+    }
+
+    // anything the block carried across the break should be advertised, not just the fluid
+    private static boolean hasStoredContents (ItemStack stack, TankContents contents, int upgradeCount) {
+        if (contents != null && !contents.isEmpty())
+            return true;
+        if (upgradeCount > 0)
+            return true;
+
+        TankAttributesData attributes = stack.get(ModDataComponents.TANK_ATTRIBUTES.get());
+        return attributes != null && !attributes.isEmpty();
     }
 
     private long capacityFor (ItemStack stack) {
