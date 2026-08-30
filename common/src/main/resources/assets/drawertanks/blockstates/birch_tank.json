@@ -1,0 +1,19 @@
+{
+    "variants": {
+        "facing=north": {
+            "model": "drawertanks:block/tank_birch"
+        },
+        "facing=east": {
+            "model": "drawertanks:block/tank_birch",
+            "y": 90
+        },
+        "facing=south": {
+            "model": "drawertanks:block/tank_birch",
+            "y": 180
+        },
+        "facing=west": {
+            "model": "drawertanks:block/tank_birch",
+            "y": 270
+        }
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "block.drawertanks.acacia_tank": "Acacia Tank",
+    "block.drawertanks.bamboo_tank": "Bamboo Tank",
+    "block.drawertanks.birch_tank": "Birch Tank",
+    "block.drawertanks.cherry_tank": "Cherry Tank",
+    "block.drawertanks.crimson_tank": "Crimson Tank",
+    "block.drawertanks.dark_oak_tank": "Dark Oak Tank",
+    "block.drawertanks.jungle_tank": "Jungle Tank",
+    "block.drawertanks.mangrove_tank": "Mangrove Tank",
+    "block.drawertanks.oak_tank": "Oak Tank",
+    "block.drawertanks.pale_oak_tank": "Pale Oak Tank",
+    "block.drawertanks.spruce_tank": "Spruce Tank",
+    "block.drawertanks.warped_tank": "Warped Tank",
+    "itemGroup.drawertanks": "Drawer Tanks",
+    "tooltip.drawertanks.capacity": "Capacity: %s B",
+    "tooltip.drawertanks.contents": "%s: %s / %s B",
+    "tooltip.drawertanks.empty": "Empty"
+}

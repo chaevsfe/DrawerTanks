@@ -1,0 +1,19 @@
+{
+    "variants": {
+        "facing=north": {
+            "model": "drawertanks:block/tank_warped"
+        },
+        "facing=east": {
+            "model": "drawertanks:block/tank_warped",
+            "y": 90
+        },
+        "facing=south": {
+            "model": "drawertanks:block/tank_warped",
+            "y": 180
+        },
+        "facing=west": {
+            "model": "drawertanks:block/tank_warped",
+            "y": 270
+        }
+    }
+}

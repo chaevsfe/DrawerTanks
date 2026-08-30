@@ -1,0 +1,19 @@
+{
+    "variants": {
+        "facing=north": {
+            "model": "drawertanks:block/tank_acacia"
+        },
+        "facing=east": {
+            "model": "drawertanks:block/tank_acacia",
+            "y": 90
+        },
+        "facing=south": {
+            "model": "drawertanks:block/tank_acacia",
+            "y": 180
+        },
+        "facing=west": {
+            "model": "drawertanks:block/tank_acacia",
+            "y": 270
+        }
+    }
+}

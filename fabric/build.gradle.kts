@@ -18,6 +18,7 @@ dependencies {
 }
 
 loom {
+    accessWidenerPath = file("src/main/resources/drawertanks.fabric.accesswidener")
     runs {
         named("client") {
             client()

@@ -1,0 +1,200 @@
+{
+    "parent": "block/block",
+    "textures": {
+        "particle": "storagedrawers:block/drawers_crimson_side",
+        "side": "storagedrawers:block/drawers_crimson_side",
+        "front": "drawertanks:block/tank_crimson_front",
+        "interior": "drawertanks:block/tank_interior"
+    },
+    "elements": [
+        {
+            "from": [
+                0,
+                0,
+                0
+            ],
+            "to": [
+                16,
+                16,
+                16
+            ],
+            "faces": {
+                "north": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        16
+                    ],
+                    "texture": "#front",
+                    "cullface": "north"
+                },
+                "south": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        16
+                    ],
+                    "texture": "#side",
+                    "cullface": "south"
+                },
+                "east": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        16
+                    ],
+                    "texture": "#side",
+                    "cullface": "east"
+                },
+                "west": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        16
+                    ],
+                    "texture": "#side",
+                    "cullface": "west"
+                },
+                "up": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        16
+                    ],
+                    "texture": "#side",
+                    "cullface": "up"
+                },
+                "down": {
+                    "uv": [
+                        0,
+                        0,
+                        16,
+                        16
+                    ],
+                    "texture": "#side",
+                    "cullface": "down"
+                }
+            }
+        },
+        {
+            "from": [
+                3,
+                3,
+                3
+            ],
+            "to": [
+                13,
+                13,
+                3
+            ],
+            "faces": {
+                "north": {
+                    "uv": [
+                        3,
+                        3,
+                        13,
+                        13
+                    ],
+                    "texture": "#interior"
+                }
+            }
+        },
+        {
+            "from": [
+                3,
+                3,
+                0
+            ],
+            "to": [
+                3,
+                13,
+                3
+            ],
+            "faces": {
+                "east": {
+                    "uv": [
+                        13,
+                        3,
+                        16,
+                        13
+                    ],
+                    "texture": "#interior"
+                }
+            }
+        },
+        {
+            "from": [
+                13,
+                3,
+                0
+            ],
+            "to": [
+                13,
+                13,
+                3
+            ],
+            "faces": {
+                "west": {
+                    "uv": [
+                        0,
+                        3,
+                        3,
+                        13
+                    ],
+                    "texture": "#interior"
+                }
+            }
+        },
+        {
+            "from": [
+                3,
+                3,
+                0
+            ],
+            "to": [
+                13,
+                3,
+                3
+            ],
+            "faces": {
+                "up": {
+                    "uv": [
+                        3,
+                        0,
+                        13,
+                        3
+                    ],
+                    "texture": "#interior"
+                }
+            }
+        },
+        {
+            "from": [
+                3,
+                13,
+                0
+            ],
+            "to": [
+                13,
+                13,
+                3
+            ],
+            "faces": {
+                "down": {
+                    "uv": [
+                        3,
+                        13,
+                        13,
+                        16
+                    ],
+                    "texture": "#interior"
+                }
+            }
+        }
+    ]
+}

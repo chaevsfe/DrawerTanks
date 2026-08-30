@@ -1,0 +1,17 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "///",
+        "GBG",
+        "///"
+    ],
+    "key": {
+        "/": "minecraft:acacia_planks",
+        "G": "minecraft:glass",
+        "B": "minecraft:bucket"
+    },
+    "result": {
+        "id": "drawertanks:acacia_tank",
+        "count": 1
+    }
+}

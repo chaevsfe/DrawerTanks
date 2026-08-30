@@ -1,0 +1,17 @@
+{
+    "replace": false,
+    "values": [
+        "drawertanks:acacia_tank",
+        "drawertanks:bamboo_tank",
+        "drawertanks:birch_tank",
+        "drawertanks:cherry_tank",
+        "drawertanks:crimson_tank",
+        "drawertanks:dark_oak_tank",
+        "drawertanks:jungle_tank",
+        "drawertanks:mangrove_tank",
+        "drawertanks:oak_tank",
+        "drawertanks:pale_oak_tank",
+        "drawertanks:spruce_tank",
+        "drawertanks:warped_tank"
+    ]
+}

@@ -1,0 +1,17 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "///",
+        "GBG",
+        "///"
+    ],
+    "key": {
+        "/": "minecraft:bamboo_planks",
+        "G": "minecraft:glass",
+        "B": "minecraft:bucket"
+    },
+    "result": {
+        "id": "drawertanks:bamboo_tank",
+        "count": 1
+    }
+}

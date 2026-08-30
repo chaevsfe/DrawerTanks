@@ -1,0 +1,19 @@
+{
+    "variants": {
+        "facing=north": {
+            "model": "drawertanks:block/tank_spruce"
+        },
+        "facing=east": {
+            "model": "drawertanks:block/tank_spruce",
+            "y": 90
+        },
+        "facing=south": {
+            "model": "drawertanks:block/tank_spruce",
+            "y": 180
+        },
+        "facing=west": {
+            "model": "drawertanks:block/tank_spruce",
+            "y": 270
+        }
+    }
+}

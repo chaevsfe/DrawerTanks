@@ -12,6 +12,7 @@
         "issues": "${mod_issues_url}"
     },
     "description": "${mod_description}",
+    "accessWidener": "drawertanks.fabric.accesswidener",
     "entrypoints": {
         "main": [
             "com.chaevsfe.drawertanks.DrawerTanksFabric"

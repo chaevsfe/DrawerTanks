@@ -1,0 +1,17 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "///",
+        "GBG",
+        "///"
+    ],
+    "key": {
+        "/": "minecraft:birch_planks",
+        "G": "minecraft:glass",
+        "B": "minecraft:bucket"
+    },
+    "result": {
+        "id": "drawertanks:birch_tank",
+        "count": 1
+    }
+}

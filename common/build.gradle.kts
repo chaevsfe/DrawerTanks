@@ -5,6 +5,10 @@ plugins {
     id("net.fabricmc.fabric-loom") version "1.18.0-alpha.9"
 }
 
+loom {
+    accessWidenerPath = file("src/main/resources/drawertanks.accesswidener")
+}
+
 dependencies {
     minecraft("com.mojang:minecraft:${Versions.minecraft}")
     compileOnly(Versions.sdModrinthFabric)
