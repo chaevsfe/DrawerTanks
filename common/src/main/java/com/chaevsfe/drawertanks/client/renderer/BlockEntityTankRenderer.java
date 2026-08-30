@@ -16,6 +16,7 @@ import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.core.Direction;
+import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -41,6 +42,12 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
         BlockEntityRenderer.super.extractRenderState(blockEntity, renderState, partialTick, cameraPos, crumbleOverlay);
 
         renderState.blockState = blockEntity.getBlockState();
+
+        // the tank is a full opaque cube, so light at its own position is zero; sample in front of the window
+        if (blockEntity.getLevel() != null && renderState.blockState.hasProperty(BlockTank.FACING)) {
+            Direction facing = renderState.blockState.getValue(BlockTank.FACING);
+            renderState.lightCoords = LightCoordsUtil.getLightCoords(blockEntity.getLevel(), blockEntity.getBlockPos().relative(facing));
+        }
 
         TankData data = blockEntity.tankData();
         renderState.hasFluid = !data.isEmpty();

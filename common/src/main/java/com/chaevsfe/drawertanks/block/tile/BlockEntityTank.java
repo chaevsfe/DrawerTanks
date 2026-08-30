@@ -44,7 +44,7 @@ public class BlockEntityTank extends BaseBlockEntity
 
     private Object platformFluidHandler;
     private boolean syncPending;
-    private long lastSyncTime = Long.MIN_VALUE;
+    private long lastSyncTime = -100;
 
     public BlockEntityTank (BlockPos pos, BlockState state) {
         this(ModBlockEntities.TANK.get(), pos, state);
