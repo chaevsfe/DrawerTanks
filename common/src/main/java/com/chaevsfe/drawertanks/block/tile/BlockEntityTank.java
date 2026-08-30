@@ -106,27 +106,32 @@ public class BlockEntityTank extends BaseBlockEntity
     }
 
     public IDrawerAttributesModifiable getDrawerAttributes () {
+        return attributes();
+    }
+
+    // linked tanks redirect this at their channel pool so every tank on the pattern shares it
+    protected BasicDrawerAttributes attributes () {
         return attributes;
     }
 
     public boolean isFluidLocked () {
-        return attributes.isItemLocked(LockAttribute.LOCK_EMPTY);
+        return attributes().isItemLocked(LockAttribute.LOCK_EMPTY);
     }
 
     public boolean isConcealed () {
-        return attributes.isConcealed();
+        return attributes().isConcealed();
     }
 
     public boolean isShowingQuantity () {
-        return attributes.isShowingQuantity();
+        return attributes().isShowingQuantity();
     }
 
     public boolean isVoid () {
-        return attributes.isVoid();
+        return attributes().isVoid();
     }
 
     public boolean isUnlimitedVending () {
-        return attributes.isUnlimitedVending();
+        return attributes().isUnlimitedVending();
     }
 
     public long capacityDroplets () {
@@ -188,7 +193,7 @@ public class BlockEntityTank extends BaseBlockEntity
 
     public boolean upgradeFitsContents (ItemStack upgrade) {
         if (upgrade.getItem() == com.jaquadro.minecraft.storagedrawers.core.ModItems.ONE_STACK_UPGRADE.get())
-            return tankData.getAmount() <= DROPLETS_PER_BUCKET;
+            return tankData().getAmount() <= DROPLETS_PER_BUCKET;
         return true;
     }
 
@@ -375,15 +380,15 @@ public class BlockEntityTank extends BaseBlockEntity
 
         @Override
         public void write (ValueOutput output) {
-            if (attributes.isItemLocked(LockAttribute.LOCK_EMPTY))
+            if (attributes().isItemLocked(LockAttribute.LOCK_EMPTY))
                 output.store("Locked", Codec.BOOL, true);
             else
                 output.discard("Locked");
-            if (attributes.isConcealed())
+            if (attributes().isConcealed())
                 output.store("Concealed", Codec.BOOL, true);
             else
                 output.discard("Concealed");
-            if (attributes.isShowingQuantity())
+            if (attributes().isShowingQuantity())
                 output.store("ShowQuantity", Codec.BOOL, true);
             else
                 output.discard("ShowQuantity");

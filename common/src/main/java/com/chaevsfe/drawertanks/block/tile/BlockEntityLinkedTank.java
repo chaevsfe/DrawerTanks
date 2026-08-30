@@ -24,6 +24,8 @@ public class BlockEntityLinkedTank extends BlockEntityTank
     private final DyeColor[] channels = new DyeColor[STRIPS];
     private long lastSeenVersion = Long.MIN_VALUE;
     private boolean legacyContentsPending;
+    // the channel's capacity depends on its upgrades, which the client cannot resolve on its own
+    private long mirrorCapacity = -1;
 
     public BlockEntityLinkedTank (BlockPos pos, BlockState state) {
         super(ModBlockEntities.LINKED_TANK.get(), pos, state);
@@ -94,25 +96,25 @@ public class BlockEntityLinkedTank extends BlockEntityTank
     }
 
     @Override
-    protected void onFluidLockChanged (boolean locked) {
+    protected com.jaquadro.minecraft.storagedrawers.capabilities.BasicDrawerAttributes attributes () {
         LinkedChannels.Pool pool = pool();
-        if (pool == null) {
-            super.onFluidLockChanged(locked);
-            return;
-        }
+        return pool != null ? pool.attributes : super.attributes();
+    }
 
-        pool.fluidLocked = locked;
-        pool.data.setRetainFluid(locked);
+    @Override
+    public com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.UpgradeData upgrades () {
+        LinkedChannels.Pool pool = pool();
+        return pool != null ? pool.upgrades : super.upgrades();
     }
 
     @Override
     public long capacityDroplets () {
-        return (long) TankConfig.linkedChannelCapacityBuckets * DROPLETS_PER_BUCKET;
-    }
+        LinkedChannels.Pool pool = pool();
+        if (pool != null)
+            return pool.capacityDroplets();
 
-    @Override
-    public boolean acceptsUpgrades () {
-        return false;
+        return mirrorCapacity > 0 ? mirrorCapacity
+            : (long) TankConfig.linkedChannelCapacityBuckets * DROPLETS_PER_BUCKET;
     }
 
     @Override
@@ -135,12 +137,6 @@ public class BlockEntityLinkedTank extends BlockEntityTank
     public static void serverTickLinked (Level level, BlockPos pos, BlockState state, BlockEntityLinkedTank tank) {
         LinkedChannels.Pool pool = tank.pool();
         if (pool != null) {
-            // restores the channel lock after a reload; an explicit key use goes through onFluidLockChanged
-            if (tank.isFluidLocked() && !pool.fluidLocked) {
-                pool.fluidLocked = true;
-                pool.data.setRetainFluid(true);
-            }
-
             if (tank.legacyContentsPending) {
                 TankData mirror = tank.clientMirror();
                 long moved = 0;
@@ -211,6 +207,8 @@ public class BlockEntityLinkedTank extends BlockEntityTank
                 }
             });
 
+            mirrorCapacity = input.read("Capacity", Codec.LONG).orElse(-1L);
+
             // worlds from the coupler era stored fluid locally; fold it into the channel pool once
             legacyContentsPending = !input.read("Mirror", Codec.BOOL).orElse(false);
         }
@@ -221,6 +219,7 @@ public class BlockEntityLinkedTank extends BlockEntityTank
             for (DyeColor color : channels)
                 ids.add(color.getId());
             output.store("Channels", Codec.INT.listOf(), ids);
+            output.store("Capacity", Codec.LONG, capacityDroplets());
             // only claim the fold has happened once it actually has, or a non-ticking chunk loses the fluid
             if (legacyContentsPending)
                 output.discard("Mirror");
