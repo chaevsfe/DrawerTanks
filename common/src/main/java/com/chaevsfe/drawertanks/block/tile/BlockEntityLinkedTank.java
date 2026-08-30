@@ -123,9 +123,11 @@ public class BlockEntityLinkedTank extends BlockEntityTank
             LinkedChannels.Pool pool = store.pool(channelKey());
             pool.version++;
             lastSeenVersion = pool.version;
-            TankData mirror = clientMirror();
-            mirror.setFluid(pool.data.getFluid(), pool.data.getComponents());
-            mirror.setAmount(pool.data.getAmount());
+            if (!legacyContentsPending) {
+                TankData mirror = clientMirror();
+                mirror.setFluid(pool.data.getFluid(), pool.data.getComponents());
+                mirror.setAmount(pool.data.getAmount());
+            }
         }
         super.onContentsChanged();
     }
@@ -141,18 +143,23 @@ public class BlockEntityLinkedTank extends BlockEntityTank
 
             if (tank.legacyContentsPending) {
                 TankData mirror = tank.clientMirror();
+                long moved = 0;
                 if (!mirror.isEmpty() && (pool.data.isEmpty() || pool.data.matches(mirror.getFluid(), mirror.getComponents()))) {
                     long space = Math.max(0, tank.capacityDroplets() - pool.data.getAmount());
-                    long moved = Math.min(space, mirror.getAmount());
+                    moved = Math.min(space, mirror.getAmount());
                     if (moved > 0) {
                         pool.data.setFluid(mirror.getFluid(), mirror.getComponents());
                         pool.data.setAmount(pool.data.getAmount() + moved);
                         mirror.setAmount(mirror.getAmount() - moved);
-                        tank.onContentsChanged();
                     }
                 }
-                // whatever would not fit stays put and retries once the pool drains or matches
+
+                // whatever would not fit stays put and retries once the pool drains or matches.
+                // this must settle before onContentsChanged, which refreshes the mirror from the
+                // pool once the migration is done and would otherwise re-arm the fold.
                 tank.legacyContentsPending = !mirror.isEmpty();
+                if (moved > 0)
+                    tank.onContentsChanged();
             }
 
             if (!tank.legacyContentsPending && pool.version != tank.lastSeenVersion) {
