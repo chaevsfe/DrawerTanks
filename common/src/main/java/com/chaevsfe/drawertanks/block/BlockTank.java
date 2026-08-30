@@ -72,7 +72,7 @@ public class BlockTank extends HorizontalDirectionalBlock implements EntityBlock
             if (!(level.getBlockEntity(pos) instanceof BlockEntityTank tank))
                 return InteractionResult.PASS;
 
-            if (!tank.upgradeFitsContents(stack))
+            if (!BlockEntityTank.upgradeApplies(stack) || !tank.upgradeFitsContents(stack))
                 return InteractionResult.PASS;
 
             if (!tank.upgrades().canAddUpgrade(stack))

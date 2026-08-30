@@ -115,6 +115,17 @@ public class BlockEntityTank extends BaseBlockEntity
             syncPending = true;
     }
 
+    public static boolean upgradeApplies (ItemStack upgrade) {
+        Item item = upgrade.getItem();
+        if (item instanceof ItemUpgradeStorage)
+            return true;
+        return item == com.jaquadro.minecraft.storagedrawers.core.ModItems.ONE_STACK_UPGRADE.get()
+            || item == com.jaquadro.minecraft.storagedrawers.core.ModItems.VOID_UPGRADE.get()
+            || item == com.jaquadro.minecraft.storagedrawers.core.ModItems.CREATIVE_STORAGE_UPGRADE.get()
+            || item == com.jaquadro.minecraft.storagedrawers.core.ModItems.CREATIVE_VENDING_UPGRADE.get()
+            || item == com.jaquadro.minecraft.storagedrawers.core.ModItems.ILLUMINATION_UPGRADE.get();
+    }
+
     public boolean upgradeFitsContents (ItemStack upgrade) {
         if (upgrade.getItem() == com.jaquadro.minecraft.storagedrawers.core.ModItems.ONE_STACK_UPGRADE.get())
             return tankData.getAmount() <= DROPLETS_PER_BUCKET;

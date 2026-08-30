@@ -104,7 +104,8 @@ public class InventoryTankUpgrade implements Container
     public void clearContent () { }
 
     public boolean canAddUpgrade (@NotNull ItemStack item) {
-        return tank != null && tank.upgrades().canAddUpgrade(item) && tank.upgradeFitsContents(item);
+        return tank != null && BlockEntityTank.upgradeApplies(item)
+            && tank.upgrades().canAddUpgrade(item) && tank.upgradeFitsContents(item);
     }
 
     public boolean canRemoveUpgrade (int slot) {
@@ -115,6 +116,8 @@ public class InventoryTankUpgrade implements Container
 
     public boolean canSwapUpgrade (int slot, @NotNull ItemStack item) {
         if (item.getCount() > 1 || tank == null || getItem(slot).isEmpty())
+            return false;
+        if (!BlockEntityTank.upgradeApplies(item))
             return false;
         if (!tank.upgrades().canSwapUpgrade(slot, item) || !tank.upgradeFitsContents(item))
             return false;

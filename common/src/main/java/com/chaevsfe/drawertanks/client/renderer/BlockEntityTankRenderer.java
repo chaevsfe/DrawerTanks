@@ -5,6 +5,7 @@ import com.chaevsfe.drawertanks.block.tile.BlockEntityTank;
 import com.chaevsfe.drawertanks.block.tile.tiledata.TankData;
 import com.chaevsfe.drawertanks.client.renderer.state.TankRenderState;
 import com.chaevsfe.drawertanks.platform.Bridges;
+import com.jaquadro.minecraft.storagedrawers.config.ModCommonConfig;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
@@ -48,6 +49,12 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
             Direction facing = renderState.blockState.getValue(BlockTank.FACING);
             renderState.lightCoords = LightCoordsUtil.getLightCoords(blockEntity.getLevel(), blockEntity.getBlockPos().relative(facing));
         }
+
+        int enforcedLight = blockEntity.upgrades().hasIlluminationUpgrade()
+            ? ModCommonConfig.INSTANCE.UPGRADES.illuminationUpgrade.illuminationLevel.get()
+            : ModCommonConfig.INSTANCE.UPGRADES.illuminationUpgrade.minIlluminationLevel.get();
+        int enforcedBlockLight = Math.max(renderState.lightCoords & 0xFFFF, enforcedLight * 16);
+        renderState.lightCoords = (renderState.lightCoords & 0xFFFF0000) | enforcedBlockLight;
 
         TankData data = blockEntity.tankData();
         renderState.hasFluid = !data.isEmpty();

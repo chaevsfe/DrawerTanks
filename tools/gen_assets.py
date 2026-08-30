@@ -79,13 +79,32 @@ def make_linked_front(side_img):
 def make_coupler():
     img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
     px = img.load()
-    for i in range(8):
-        x, y = 3 + i, 12 - i
-        px[x, y] = (196, 146, 66, 255)
-        px[x + 1, y] = (120, 85, 35, 255)
-    for x, y in [(11, 3), (12, 3), (11, 4), (12, 4)]:
-        px[x, y] = (110, 230, 160, 255)
-    px[12, 3] = (26, 66, 44, 255)
+    # blaze rod shaft, 2px wide with highlight and shadow, gold bands
+    for i in range(9):
+        x, y = 2 + i, 14 - i
+        px[x, y] = (232, 190, 92, 255)
+        px[x + 1, y] = (176, 118, 40, 255)
+        if x + 2 <= 15 and i < 8:
+            px[x + 2, y] = (110, 70, 24, 255)
+    for i in (1, 4):
+        x, y = 2 + i, 14 - i
+        px[x, y] = (255, 232, 160, 255)
+        px[x + 1, y] = (216, 162, 60, 255)
+    # iron collar between rod and eye
+    for x, y in [(10, 5), (11, 5), (10, 6), (11, 4)]:
+        px[x, y] = (168, 168, 176, 255)
+    px[11, 5] = (120, 120, 128, 255)
+    # ender eye head: green orb with dark pupil and white glint
+    eye = {(12, 1): (46, 120, 86), (13, 1): (58, 150, 104),
+           (11, 2): (58, 150, 104), (12, 2): (120, 232, 170), (13, 2): (90, 200, 140), (14, 2): (46, 120, 86),
+           (11, 3): (90, 200, 140), (12, 3): (22, 46, 34), (13, 3): (120, 232, 170), (14, 3): (58, 150, 104),
+           (12, 4): (58, 150, 104), (13, 4): (46, 120, 86)}
+    for (x, y), c in eye.items():
+        px[x, y] = (*c, 255)
+    px[13, 2] = (235, 255, 240, 255)
+    # ender sparkles
+    for x, y in [(9, 1), (15, 5), (8, 8)]:
+        px[x, y] = (186, 108, 234, 255)
     return img
 
 
@@ -297,10 +316,10 @@ def main():
 
     lang["block.drawertanks.linked_tank"] = "Linked Tank"
     lang["item.drawertanks.tank_coupler"] = "Tank Coupler"
-    lang["message.drawertanks.coupler.source_selected"] = "Source tank selected"
-    lang["message.drawertanks.coupler.linked"] = "Tanks linked, this tank now pulls from the source"
+    lang["message.drawertanks.coupler.source_selected"] = "Source selected, now use the coupler on the tank that should receive the fluid"
+    lang["message.drawertanks.coupler.linked"] = "Linked, fluid will now flow from the source into this tank"
     lang["message.drawertanks.coupler.unlinked"] = "Link cleared"
-    lang["message.drawertanks.coupler.same_tank"] = "Select a different tank to link"
+    lang["message.drawertanks.coupler.same_tank"] = "This is the selected source, use the coupler on the receiving tank"
 
     lang["itemGroup.drawertanks"] = "Drawer Tanks"
     lang["tooltip.drawertanks.capacity"] = "Capacity: %s B"
