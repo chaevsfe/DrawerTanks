@@ -52,6 +52,16 @@ public class BlockEntityLinkedTank extends BlockEntityTank
             return;
         }
 
+        if (source == this) {
+            setPartner(null);
+            return;
+        }
+
+        // refuse to pull from a partner that pulls from us; a mutual link would slosh every tick
+        GlobalPos self = GlobalPos.of(serverLevel.dimension(), getBlockPos());
+        if (self.equals(source.getPartner()))
+            return;
+
         TankData from = source.tankData();
         TankData to = tankData();
         if (from.isEmpty())
@@ -66,9 +76,12 @@ public class BlockEntityLinkedTank extends BlockEntityTank
 
         to.setFluid(from.getFluid(), from.getComponents());
         to.setAmount(to.getAmount() + moved);
-        from.setAmount(from.getAmount() - moved);
         onContentsChanged();
-        source.onContentsChanged();
+
+        if (!source.isUnlimitedVending()) {
+            from.setAmount(from.getAmount() - moved);
+            source.onContentsChanged();
+        }
     }
 
     @Override

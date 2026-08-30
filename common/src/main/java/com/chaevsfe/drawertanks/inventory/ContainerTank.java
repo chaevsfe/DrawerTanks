@@ -83,11 +83,8 @@ public class ContainerTank extends AbstractContainerMenu
         if (slotIndex < upgradeEnd) {
             if (!moveItemStackTo(slotStack, inventoryStart, hotbarEnd, true))
                 return ItemStack.EMPTY;
-        } else if (slotStack.getItem() instanceof ItemUpgrade) {
-            ItemStack single = slotStack.copyWithCount(1);
-            if (!moveItemStackTo(single, 0, upgradeEnd, false))
-                return ItemStack.EMPTY;
-
+        } else if (slotStack.getItem() instanceof ItemUpgrade
+            && moveItemStackTo(slotStack.copyWithCount(1), 0, upgradeEnd, false)) {
             slotStack.shrink(1);
             if (slotStack.isEmpty())
                 slot.set(ItemStack.EMPTY);

@@ -92,9 +92,9 @@ def make_coupler():
 def make_gui(sd_res):
     img = Image.open(os.path.join(sd_res, "assets/storagedrawers/textures/gui/drawers_1.png")).convert("RGBA")
     px = img.load()
-    panel = px[60, 20]
+    panel = (198, 198, 198, 255)
     for y in range(16, 74):
-        for x in range(60, 130):
+        for x in range(8, 168):
             px[x, y] = panel
     # gauge frame: 1px border around a dark 16x56 interior at (80,18)
     for y in range(17, 75):

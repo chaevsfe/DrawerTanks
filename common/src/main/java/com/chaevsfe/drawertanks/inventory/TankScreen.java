@@ -80,8 +80,10 @@ public class TankScreen extends AbstractContainerScreen<ContainerTank>
         graphics.text(this.font, this.inventory.getDisplayName().getString(), 8, this.imageHeight - 96 + 2, 0xFF404040, false);
 
         BlockEntityTank tank = menu.getTank();
-        if (tank != null)
-            graphics.text(this.font, amountLabel(tank), 102, 42, 0xFF404040, false);
+        if (tank != null) {
+            String label = amountLabel(tank);
+            graphics.text(this.font, label, 168 - this.font.width(label), 42, 0xFF404040, false);
+        }
     }
 
     private static String amountLabel (BlockEntityTank tank) {
@@ -90,7 +92,7 @@ public class TankScreen extends AbstractContainerScreen<ContainerTank>
             return "";
 
         String held = trimmed(tank.tankData().getAmount() / (double) BlockEntityTank.DROPLETS_PER_BUCKET);
-        if (capacity >= Long.MAX_VALUE / 8)
+        if (BlockEntityTank.isUnlimitedCapacity(capacity))
             return held + " B";
 
         return held + " / " + (capacity / BlockEntityTank.DROPLETS_PER_BUCKET) + " B";
@@ -99,6 +101,6 @@ public class TankScreen extends AbstractContainerScreen<ContainerTank>
     private static String trimmed (double buckets) {
         if (buckets == Math.floor(buckets))
             return Long.toString((long) buckets);
-        return String.format("%.1f", buckets);
+        return String.format(java.util.Locale.ROOT, "%.1f", buckets);
     }
 }

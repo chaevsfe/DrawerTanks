@@ -114,9 +114,11 @@ public class InventoryTankUpgrade implements Container
     }
 
     public boolean canSwapUpgrade (int slot, @NotNull ItemStack item) {
-        if (item.getCount() > 1)
+        if (item.getCount() > 1 || tank == null || getItem(slot).isEmpty())
             return false;
-        return canRemoveUpgrade(slot) && tank != null && tank.upgrades().canSwapUpgrade(slot, item);
+        if (!tank.upgrades().canSwapUpgrade(slot, item) || !tank.upgradeFitsContents(item))
+            return false;
+        return tank.tankData().getAmount() <= tank.capacityDropletsWithSwap(slot, item);
     }
 
     public boolean slotIsLocked (int slot) {

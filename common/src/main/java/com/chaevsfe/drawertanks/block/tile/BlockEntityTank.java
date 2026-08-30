@@ -122,12 +122,18 @@ public class BlockEntityTank extends BaseBlockEntity
     }
 
     public long capacityDropletsWithout (int slot) {
-        List<ItemStack> remaining = new ArrayList<>();
-        for (int i = 0; i < upgradeData.getSlotCount(); i++) {
-            if (i != slot)
-                remaining.add(upgradeData.getUpgrade(i));
-        }
-        return computeCapacityDroplets(remaining);
+        return capacityDropletsWithSwap(slot, ItemStack.EMPTY);
+    }
+
+    public long capacityDropletsWithSwap (int slot, ItemStack incoming) {
+        List<ItemStack> upgrades = new ArrayList<>();
+        for (int i = 0; i < upgradeData.getSlotCount(); i++)
+            upgrades.add(i == slot ? incoming : upgradeData.getUpgrade(i));
+        return computeCapacityDroplets(upgrades);
+    }
+
+    public static boolean isUnlimitedCapacity (long capacityDroplets) {
+        return capacityDroplets >= Long.MAX_VALUE / 8;
     }
 
     public static long computeCapacityDroplets (Iterable<ItemStack> upgrades) {
@@ -140,9 +146,13 @@ public class BlockEntityTank extends BaseBlockEntity
             if (item instanceof ItemUpgradeStorage storage)
                 multiplier += ModCommonConfig.INSTANCE.UPGRADES.getLevelMult(storage.level.getLevel());
             else if (item == com.jaquadro.minecraft.storagedrawers.core.ModItems.CREATIVE_STORAGE_UPGRADE.get()
-                || item == com.jaquadro.minecraft.storagedrawers.core.ModItems.CREATIVE_VENDING_UPGRADE.get())
+                && ModCommonConfig.INSTANCE.UPGRADES.creativeStorageUpgrade.enableUpgrade.get())
                 unlimited = true;
-            else if (item == com.jaquadro.minecraft.storagedrawers.core.ModItems.ONE_STACK_UPGRADE.get())
+            else if (item == com.jaquadro.minecraft.storagedrawers.core.ModItems.CREATIVE_VENDING_UPGRADE.get()
+                && ModCommonConfig.INSTANCE.UPGRADES.creativeVendingUpgrade.enableUpgrade.get())
+                unlimited = true;
+            else if (item == com.jaquadro.minecraft.storagedrawers.core.ModItems.ONE_STACK_UPGRADE.get()
+                && ModCommonConfig.INSTANCE.UPGRADES.oneStackUpgrade.enableUpgrade.get())
                 oneStack = true;
         }
 
