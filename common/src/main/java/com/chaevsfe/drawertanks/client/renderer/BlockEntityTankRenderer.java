@@ -132,10 +132,10 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
             Matrix4f matrix = pose.pose();
             int light = renderState.lightCoords;
 
-            addVertex(matrix, pose, vertexConsumer, light, x2, y1, z, su1, svBottom, r, g, b, a);
-            addVertex(matrix, pose, vertexConsumer, light, x2, y2, z, su1, svTop, r, g, b, a);
-            addVertex(matrix, pose, vertexConsumer, light, x1, y2, z, su2, svTop, r, g, b, a);
-            addVertex(matrix, pose, vertexConsumer, light, x1, y1, z, su2, svBottom, r, g, b, a);
+            addVertex(matrix, pose, vertexConsumer, light, x2, y1, z, su2, svBottom, r, g, b, a);
+            addVertex(matrix, pose, vertexConsumer, light, x2, y2, z, su2, svTop, r, g, b, a);
+            addVertex(matrix, pose, vertexConsumer, light, x1, y2, z, su1, svTop, r, g, b, a);
+            addVertex(matrix, pose, vertexConsumer, light, x1, y1, z, su1, svBottom, r, g, b, a);
         }
 
         private static void addVertex (Matrix4f matrix, PoseStack.Pose pose, VertexConsumer buffer, int light, float x, float y, float z, float u, float v, float r, float g, float b, float a) {

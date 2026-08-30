@@ -83,17 +83,24 @@ public class TankResourceHandler implements ResourceHandler<FluidResource>
             return 0;
 
         TankData data = tank.tankData();
-        if (!data.isEmpty() && !data.matches(resource.value(), resource.getComponentsPatch()))
+
+        // sub-mB residue (possible on worlds coming from fabric) is replaceable, not a fluid lock
+        boolean residueOnly = !data.isEmpty() && data.getAmount() < BlockEntityTank.DROPLETS_PER_MB;
+        if (!data.isEmpty() && !residueOnly && !data.matches(resource.value(), resource.getComponentsPatch()))
             return 0;
 
-        long spaceMb = Math.max(0, tank.capacityDroplets() - data.getAmount()) / BlockEntityTank.DROPLETS_PER_MB;
+        long capacity = tank.capacityDroplets();
+        long space = Math.max(0, capacity - (residueOnly ? 0 : data.getAmount()));
+        long spaceMb = (space + BlockEntityTank.DROPLETS_PER_MB - 1) / BlockEntityTank.DROPLETS_PER_MB;
         int accepted = (int) Math.min(amount, spaceMb);
 
         if (accepted > 0) {
             journal.updateSnapshots(transaction);
             commitJournal.updateSnapshots(transaction);
+            if (residueOnly)
+                data.clear();
             data.setFluid(resource.value(), resource.getComponentsPatch());
-            data.setAmount(data.getAmount() + accepted * BlockEntityTank.DROPLETS_PER_MB);
+            data.setAmount(Math.min(capacity, data.getAmount() + accepted * BlockEntityTank.DROPLETS_PER_MB));
         }
 
         if (tank.isVoid() && !data.isEmpty() && data.matches(resource.value(), resource.getComponentsPatch()))
@@ -121,6 +128,9 @@ public class TankResourceHandler implements ResourceHandler<FluidResource>
             journal.updateSnapshots(transaction);
             commitJournal.updateSnapshots(transaction);
             data.setAmount(data.getAmount() - extracted * BlockEntityTank.DROPLETS_PER_MB);
+            // fold trailing sub-mB residue into the final extraction so the tank can empty
+            if (data.getAmount() > 0 && data.getAmount() < BlockEntityTank.DROPLETS_PER_MB)
+                data.setAmount(0);
         }
 
         return extracted;

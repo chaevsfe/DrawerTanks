@@ -33,6 +33,7 @@ public class BlockEntityTank extends BaseBlockEntity
 
     private Object platformFluidHandler;
     private boolean syncPending;
+    private long lastSyncTime = Long.MIN_VALUE;
 
     public BlockEntityTank (BlockPos pos, BlockState state) {
         super(ModBlockEntities.TANK.get(), pos, state);
@@ -87,7 +88,24 @@ public class BlockEntityTank extends BaseBlockEntity
 
     public void onContentsChanged () {
         setChanged();
-        syncPending = true;
+        if (getLevel() == null || getLevel().isClientSide())
+            return;
+
+        long now = getLevel().getGameTime();
+        if (now - lastSyncTime >= 4) {
+            lastSyncTime = now;
+            syncPending = false;
+            markBlockForUpdate();
+        } else
+            syncPending = true;
+    }
+
+    public boolean hasAnyUpgrade () {
+        for (int i = 0; i < upgradeData.getSlotCount(); i++) {
+            if (!upgradeData.getUpgrade(i).isEmpty())
+                return true;
+        }
+        return false;
     }
 
     public ItemStack tryRemoveUpgrade () {
@@ -97,11 +115,11 @@ public class BlockEntityTank extends BaseBlockEntity
                 continue;
 
             if (!upgradeData.setUpgrade(i, ItemStack.EMPTY))
-                return ItemStack.EMPTY;
+                continue;
 
             if (tankData.getAmount() > capacityDroplets()) {
-                upgradeData.setUpgrade(i, upgrade);
-                return ItemStack.EMPTY;
+                upgradeData.forceSetUpgrade(i, upgrade);
+                continue;
             }
 
             return upgrade;
@@ -111,8 +129,9 @@ public class BlockEntityTank extends BaseBlockEntity
     }
 
     public static void serverTick (Level level, BlockPos pos, BlockState state, BlockEntityTank tank) {
-        if (tank.syncPending && (level.getGameTime() & 3) == 0) {
+        if (tank.syncPending && level.getGameTime() - tank.lastSyncTime >= 4) {
             tank.syncPending = false;
+            tank.lastSyncTime = level.getGameTime();
             tank.markBlockForUpdate();
         }
     }
@@ -132,7 +151,7 @@ public class BlockEntityTank extends BaseBlockEntity
         if (upgrades != null) {
             for (ItemStackWithSlot slotStack : upgrades.upgrades()) {
                 if (slotStack.isValidInContainer(upgradeData.getSlotCount()))
-                    upgradeData.setUpgrade(slotStack.slot(), slotStack.stack());
+                    upgradeData.forceSetUpgrade(slotStack.slot(), slotStack.stack());
             }
         }
     }
@@ -160,12 +179,18 @@ public class BlockEntityTank extends BaseBlockEntity
         output.discard("FluidComponents");
         output.discard("Amount");
         output.discard("Upgrades");
+        output.discard("DataVersion");
     }
 
     private class TankUpgradeData extends UpgradeData
     {
         public TankUpgradeData () {
             super(UPGRADE_SLOTS);
+        }
+
+        void forceSetUpgrade (int slot, ItemStack stack) {
+            upgrades[slot] = stack;
+            setDrawerAttributes(attributes);
         }
 
         @Override

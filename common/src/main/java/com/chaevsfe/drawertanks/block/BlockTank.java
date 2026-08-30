@@ -3,6 +3,7 @@ package com.chaevsfe.drawertanks.block;
 import com.chaevsfe.drawertanks.block.tile.BlockEntityTank;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
 import com.chaevsfe.drawertanks.platform.Bridges;
+import com.jaquadro.minecraft.storagedrawers.core.ModItems;
 import com.jaquadro.minecraft.storagedrawers.item.ItemUpgrade;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
@@ -66,13 +67,20 @@ public class BlockTank extends HorizontalDirectionalBlock implements EntityBlock
     @Override
     protected InteractionResult useItemOn (ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         if (stack.getItem() instanceof ItemUpgrade) {
-            if (level.isClientSide())
-                return InteractionResult.SUCCESS;
-
             if (!(level.getBlockEntity(pos) instanceof BlockEntityTank tank))
                 return InteractionResult.PASS;
 
-            if (tank.upgrades().canAddUpgrade(stack) && tank.upgrades().addUpgrade(stack)) {
+            if (stack.getItem() == ModItems.ONE_STACK_UPGRADE.get()
+                && tank.tankData().getAmount() > BlockEntityTank.DROPLETS_PER_BUCKET)
+                return InteractionResult.PASS;
+
+            if (!tank.upgrades().canAddUpgrade(stack))
+                return InteractionResult.PASS;
+
+            if (level.isClientSide())
+                return InteractionResult.SUCCESS;
+
+            if (tank.upgrades().addUpgrade(stack)) {
                 if (!player.hasInfiniteMaterials())
                     stack.shrink(1);
                 return InteractionResult.SUCCESS;
@@ -85,8 +93,9 @@ public class BlockTank extends HorizontalDirectionalBlock implements EntityBlock
             if (level.isClientSide())
                 return InteractionResult.SUCCESS;
 
-            Bridges.FLUID.interact(player, hand, level, pos, hit.getDirection());
-            return InteractionResult.SUCCESS;
+            return Bridges.FLUID.interact(player, hand, level, pos, hit.getDirection())
+                ? InteractionResult.SUCCESS
+                : InteractionResult.FAIL;
         }
 
         return InteractionResult.TRY_WITH_EMPTY_HAND;
@@ -97,11 +106,11 @@ public class BlockTank extends HorizontalDirectionalBlock implements EntityBlock
         if (!player.isShiftKeyDown())
             return InteractionResult.PASS;
 
-        if (level.isClientSide())
-            return InteractionResult.SUCCESS;
-
         if (!(level.getBlockEntity(pos) instanceof BlockEntityTank tank))
             return InteractionResult.PASS;
+
+        if (level.isClientSide())
+            return tank.hasAnyUpgrade() ? InteractionResult.SUCCESS : InteractionResult.PASS;
 
         ItemStack removed = tank.tryRemoveUpgrade();
         if (removed.isEmpty())
@@ -130,10 +139,6 @@ public class BlockTank extends HorizontalDirectionalBlock implements EntityBlock
         if (tank.tankData().isEmpty())
             return 0;
 
-        long capacity = tank.capacityDroplets();
-        if (capacity <= 0)
-            return 0;
-
-        return 1 + (int) (tank.tankData().getAmount() * 14 / capacity);
+        return Math.min(15, 1 + (int) (tank.fillFraction() * 14));
     }
 }
