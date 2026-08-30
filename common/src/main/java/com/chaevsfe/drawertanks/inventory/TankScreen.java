@@ -52,8 +52,7 @@ public class TankScreen extends AbstractContainerScreen<ContainerTank>
     }
 
     private void extractTicks (GuiGraphicsExtractor graphics, int guiX, int guiY) {
-        BlockEntityTank tank = menu.getTank();
-        if (tank == null)
+        if (!(menu.getTank() instanceof BlockEntityTank tank))
             return;
 
         long capacity = tank.capacityDroplets();
@@ -72,8 +71,7 @@ public class TankScreen extends AbstractContainerScreen<ContainerTank>
     }
 
     private void extractFluid (GuiGraphicsExtractor graphics, int guiX, int guiY) {
-        BlockEntityTank tank = menu.getTank();
-        if (tank == null || tank.tankData().isEmpty())
+        if (!(menu.getTank() instanceof BlockEntityTank tank) || tank.tankData().isEmpty())
             return;
 
         TankData data = tank.tankData();
@@ -102,9 +100,10 @@ public class TankScreen extends AbstractContainerScreen<ContainerTank>
         graphics.text(this.font, I18n.get("container.storagedrawers.upgrades"), 8, 75, 0xFF404040, false);
         graphics.text(this.font, this.inventory.getDisplayName().getString(), 8, this.imageHeight - 96 + 2, 0xFF404040, false);
 
-        BlockEntityTank tank = menu.getTank();
-        if (tank == null)
+        if (!(menu.getTank() instanceof BlockEntityTank tank)) {
+            drawStoredItemLabel(graphics);
             return;
+        }
 
         long capacity = tank.capacityDroplets();
         if (tank.tankData().isEmpty() && capacity <= 0)
@@ -125,6 +124,21 @@ public class TankScreen extends AbstractContainerScreen<ContainerTank>
             drawRight(graphics, held, 36);
             drawRight(graphics, "/ " + cap + " B", 46);
         }
+    }
+
+    // a linked drawer has no fluid gauge, so show what the channel holds instead
+    private void drawStoredItemLabel (GuiGraphicsExtractor graphics) {
+        if (!(menu.getTank() instanceof com.chaevsfe.drawertanks.block.tile.BlockEntityLinkedDrawer drawer))
+            return;
+
+        net.minecraft.world.item.ItemStack stored = drawer.displayItem();
+        if (stored.isEmpty()) {
+            drawRight(graphics, I18n.get("tooltip.drawertanks.empty"), 42);
+            return;
+        }
+
+        drawRight(graphics, stored.getHoverName().getString(), 32);
+        drawRight(graphics, compact(drawer.displayCount()) + " / " + compact(drawer.capacityItems()), 44);
     }
 
     private void drawRight (GuiGraphicsExtractor graphics, String text, int y) {

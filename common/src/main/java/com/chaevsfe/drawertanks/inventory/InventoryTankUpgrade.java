@@ -14,24 +14,24 @@ public class InventoryTankUpgrade implements Container
     private static final int upgradeCapacity = BlockEntityTank.UPGRADE_SLOTS;
 
     @Nullable
-    private final BlockEntityTank tank;
+    private final UpgradeHost tank;
 
     // Client side the menu owns its slots, the way a vanilla container does. Reading through to the
     // block entity would let its update packet rewrite the array the open screen is drawing from,
     // which is what made the upgrade slots flicker.
     private final ItemStack[] clientItems = new ItemStack[upgradeCapacity];
 
-    public InventoryTankUpgrade (@Nullable BlockEntityTank tank) {
+    public InventoryTankUpgrade (@Nullable UpgradeHost tank) {
         this.tank = tank;
         java.util.Arrays.fill(clientItems, ItemStack.EMPTY);
     }
 
     private boolean clientOwned () {
-        return tank != null && tank.getLevel() != null && tank.getLevel().isClientSide();
+        return tank != null && tank.hostLevel() != null && tank.hostLevel().isClientSide();
     }
 
     @Nullable
-    public BlockEntityTank getTank () {
+    public UpgradeHost getTank () {
         return tank;
     }
 
@@ -101,16 +101,16 @@ public class InventoryTankUpgrade implements Container
     @Override
     public void setChanged () {
         if (tank != null)
-            tank.setChanged();
+            tank.hostChanged();
     }
 
     @Override
     public boolean stillValid (@NotNull Player player) {
-        if (tank == null || tank.getLevel() == null)
+        if (tank == null || tank.hostLevel() == null)
             return false;
-        if (tank.getLevel().getBlockEntity(tank.getBlockPos()) != tank)
+        if (tank.hostLevel().getBlockEntity(tank.hostPos()) != tank)
             return false;
-        return player.distanceToSqr(Vec3.atCenterOf(tank.getBlockPos())) <= 64.0;
+        return player.distanceToSqr(Vec3.atCenterOf(tank.hostPos())) <= 64.0;
     }
 
     @Override
@@ -135,7 +135,7 @@ public class InventoryTankUpgrade implements Container
     public boolean canRemoveUpgrade (int slot) {
         if (tank == null || getItem(slot).isEmpty())
             return false;
-        return tank.tankData().getAmount() <= tank.capacityDropletsWithout(slot);
+        return tank.storedAmount() <= tank.capacityWithout(slot);
     }
 
     public boolean canSwapUpgrade (int slot, @NotNull ItemStack item) {
@@ -145,7 +145,7 @@ public class InventoryTankUpgrade implements Container
             return false;
         if (!tank.upgrades().canSwapUpgrade(slot, item) || !tank.upgradeFitsContents(item))
             return false;
-        return tank.tankData().getAmount() <= tank.capacityDropletsWithSwap(slot, item);
+        return tank.storedAmount() <= tank.capacityWithSwap(slot, item);
     }
 
     public boolean slotIsLocked (int slot) {

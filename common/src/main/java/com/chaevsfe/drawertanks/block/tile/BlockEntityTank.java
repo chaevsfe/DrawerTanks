@@ -38,7 +38,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BlockEntityTank extends BaseBlockEntity
+public class BlockEntityTank extends BaseBlockEntity implements com.chaevsfe.drawertanks.inventory.UpgradeHost
 {
     public static final long DROPLETS_PER_BUCKET = 81000L;
     public static final long DROPLETS_PER_MB = 81L;
@@ -254,6 +254,36 @@ public class BlockEntityTank extends BaseBlockEntity
 
         long buckets = oneStack ? 1 : (long) baseBuckets * multiplier;
         return buckets * DROPLETS_PER_BUCKET;
+    }
+
+    @Override
+    public long storedAmount () {
+        return tankData().getAmount();
+    }
+
+    @Override
+    public long capacityWithout (int slot) {
+        return capacityDropletsWithout(slot);
+    }
+
+    @Override
+    public long capacityWithSwap (int slot, ItemStack incoming) {
+        return capacityDropletsWithSwap(slot, incoming);
+    }
+
+    @Override
+    public Level hostLevel () {
+        return getLevel();
+    }
+
+    @Override
+    public BlockPos hostPos () {
+        return getBlockPos();
+    }
+
+    @Override
+    public void hostChanged () {
+        setChanged();
     }
 
     public Component getDisplayName () {

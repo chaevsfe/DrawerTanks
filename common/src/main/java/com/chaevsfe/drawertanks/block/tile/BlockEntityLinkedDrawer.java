@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class BlockEntityLinkedDrawer extends BaseBlockEntity
+public class BlockEntityLinkedDrawer extends BaseBlockEntity implements com.chaevsfe.drawertanks.inventory.UpgradeHost
 {
     public static final int STRIPS = BlockEntityLinkedTank.STRIPS;
 
@@ -32,9 +32,30 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity
     private ItemStack mirrorItem = ItemStack.EMPTY;
     private long mirrorCount;
 
+    // the channel owns the real upgrades; this copy exists so the client can see them
+    private final MirrorAttributes mirrorAttributes = new MirrorAttributes();
+    private final MirrorUpgrades mirrorUpgrades = new MirrorUpgrades();
+
+    private class MirrorAttributes extends com.jaquadro.minecraft.storagedrawers.capabilities.BasicDrawerAttributes { }
+
+    private class MirrorUpgrades extends com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.UpgradeData
+    {
+        MirrorUpgrades () {
+            super(BlockEntityTank.UPGRADE_SLOTS);
+        }
+
+        void mirror (com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.UpgradeData source) {
+            for (int i = 0; i < upgrades.length; i++)
+                upgrades[i] = i < source.getSlotCount() ? source.getUpgrade(i).copy() : ItemStack.EMPTY;
+            setDrawerAttributes(mirrorAttributes);
+        }
+    }
+
     public BlockEntityLinkedDrawer (BlockPos pos, BlockState state) {
         super(ModBlockEntities.LINKED_DRAWER.get(), pos, state);
         Arrays.fill(channels, DyeColor.WHITE);
+        mirrorUpgrades.setDrawerAttributes(mirrorAttributes);
+        injectData(mirrorUpgrades);
         injectData(new DrawerData());
     }
 
@@ -114,7 +135,71 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity
         ItemStack reference = displayItem();
         if (reference.isEmpty())
             reference = forItem;
-        return LinkedItemChannels.Pool.capacityFor(reference);
+        LinkedItemChannels.Pool pool = pool();
+        return pool != null ? pool.capacityFor(reference)
+            : (long) TankConfig.linkedChannelCapacityStacks * (reference.isEmpty() ? 64 : reference.getMaxStackSize());
+    }
+
+    @Override
+    public com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.UpgradeData upgrades () {
+        LinkedItemChannels.Pool pool = pool();
+        return pool != null ? pool.upgrades : mirrorUpgrades;
+    }
+
+    @Override
+    public boolean acceptsUpgrades () {
+        return true;
+    }
+
+    @Override
+    public void refreshUpgradeMirror () {
+        LinkedItemChannels.Pool pool = pool();
+        if (pool != null)
+            mirrorUpgrades.mirror(pool.upgrades);
+    }
+
+    @Override
+    public boolean upgradeFitsContents (ItemStack upgrade) {
+        return true;
+    }
+
+    @Override
+    public long storedAmount () {
+        return displayCount();
+    }
+
+    @Override
+    public long capacityWithout (int slot) {
+        return capacityWithSwap(slot, ItemStack.EMPTY);
+    }
+
+    @Override
+    public long capacityWithSwap (int slot, ItemStack incoming) {
+        com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.UpgradeData source = upgrades();
+        java.util.List<ItemStack> list = new ArrayList<>();
+        for (int i = 0; i < source.getSlotCount(); i++)
+            list.add(i == slot ? incoming : source.getUpgrade(i));
+
+        ItemStack reference = displayItem();
+        int stackSize = reference.isEmpty() ? 64 : reference.getMaxStackSize();
+        long stacks = BlockEntityTank.computeCapacityDroplets(list, TankConfig.linkedChannelCapacityStacks)
+            / BlockEntityTank.DROPLETS_PER_BUCKET;
+        return stacks * stackSize;
+    }
+
+    @Override
+    public Level hostLevel () {
+        return getLevel();
+    }
+
+    @Override
+    public BlockPos hostPos () {
+        return getBlockPos();
+    }
+
+    @Override
+    public void hostChanged () {
+        setChanged();
     }
 
     public boolean tryTake (long gameTime) {
@@ -142,6 +227,7 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity
         lastSeenVersion = pool.version;
         mirrorItem = pool.prototype.copy();
         mirrorCount = pool.count;
+        mirrorUpgrades.mirror(pool.upgrades);
         requestSync();
     }
 
@@ -161,6 +247,7 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity
             drawer.lastSeenVersion = pool.version;
             drawer.mirrorItem = pool.prototype.copy();
             drawer.mirrorCount = pool.count;
+            drawer.mirrorUpgrades.mirror(pool.upgrades);
             drawer.setChanged();
             drawer.requestSync();
         }
@@ -169,6 +256,34 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity
             drawer.syncPending = false;
             drawer.lastSyncTime = level.getGameTime();
             drawer.markBlockForUpdate();
+        }
+    }
+
+    public net.minecraft.network.chat.Component getDisplayName () {
+        return net.minecraft.network.chat.Component.translatable(getBlockState().getBlock().getDescriptionId());
+    }
+
+    public static class ContentProvider implements com.texelsaurus.minecraft.chameleon.inventory.ContentMenuProvider<com.texelsaurus.minecraft.chameleon.inventory.content.PositionContent>
+    {
+        private final BlockEntityLinkedDrawer entity;
+
+        public ContentProvider (BlockEntityLinkedDrawer entity) {
+            this.entity = entity;
+        }
+
+        @Override
+        public com.texelsaurus.minecraft.chameleon.inventory.content.PositionContent createContent (net.minecraft.server.level.ServerPlayer player) {
+            return new com.texelsaurus.minecraft.chameleon.inventory.content.PositionContent(entity.getBlockPos());
+        }
+
+        @Override
+        public net.minecraft.network.chat.Component getDisplayName () {
+            return entity.getDisplayName();
+        }
+
+        @Override
+        public net.minecraft.world.inventory.AbstractContainerMenu createMenu (int id, net.minecraft.world.entity.player.Inventory inventory, net.minecraft.world.entity.player.Player player) {
+            return new com.chaevsfe.drawertanks.inventory.ContainerTank(id, inventory, entity);
         }
     }
 

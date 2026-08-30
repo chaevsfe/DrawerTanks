@@ -66,7 +66,7 @@ public class LinkedDrawerResourceHandler implements ResourceHandler<ItemResource
 
     @Override
     public long getCapacityAsLong (int index, ItemResource resource) {
-        return resource.isEmpty() ? pool.capacity() : LinkedItemChannels.Pool.capacityFor(resource.toStack(1));
+        return resource.isEmpty() ? pool.capacity() : pool.capacityFor(resource.toStack(1));
     }
 
     @Override
@@ -86,7 +86,7 @@ public class LinkedDrawerResourceHandler implements ResourceHandler<ItemResource
         if (!pool.isEmpty() && !ItemStack.isSameItemSameComponents(pool.prototype, incoming))
             return 0;
 
-        long space = Math.max(0, LinkedItemChannels.Pool.capacityFor(incoming) - pool.count);
+        long space = Math.max(0, pool.capacityFor(incoming) - pool.count);
         int accepted = (int) Math.min(amount, space);
         if (accepted <= 0)
             return 0;

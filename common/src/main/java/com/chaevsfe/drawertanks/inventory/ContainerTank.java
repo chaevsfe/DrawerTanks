@@ -25,15 +25,23 @@ public class ContainerTank extends AbstractContainerMenu
     private static final int UpgradeY = 86;
 
     @Nullable
-    private final BlockEntityTank tank;
+    private final UpgradeHost tank;
     private final InventoryTankUpgrade upgradeInventory;
     private final List<Slot> upgradeSlots = new ArrayList<>();
 
     public ContainerTank (int windowId, Inventory playerInv, Optional<PositionContent> content) {
-        this(windowId, playerInv, PositionContent.getOrNull(content, playerInv.player.level(), BlockEntityTank.class));
+        this(windowId, playerInv, resolveHost(playerInv, content));
     }
 
-    public ContainerTank (int windowId, Inventory playerInventory, @Nullable BlockEntityTank tank) {
+    // the menu serves both tanks and linked drawers, so resolve the block entity then narrow it
+    @Nullable
+    private static UpgradeHost resolveHost (Inventory playerInv, Optional<PositionContent> content) {
+        net.minecraft.world.level.block.entity.BlockEntity entity = PositionContent.getOrNull(
+            content, playerInv.player.level(), net.minecraft.world.level.block.entity.BlockEntity.class);
+        return entity instanceof UpgradeHost host ? host : null;
+    }
+
+    public ContainerTank (int windowId, Inventory playerInventory, @Nullable UpgradeHost tank) {
         super(ModContainers.TANK_CONTAINER.get(), windowId);
 
         this.tank = tank;
@@ -52,7 +60,7 @@ public class ContainerTank extends AbstractContainerMenu
     }
 
     @Nullable
-    public BlockEntityTank getTank () {
+    public UpgradeHost getTank () {
         return tank;
     }
 

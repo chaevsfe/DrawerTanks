@@ -42,7 +42,7 @@ public class LinkedDrawerItemStorage extends SnapshotParticipant<LinkedDrawerIte
         if (!pool.isEmpty() && !ItemStack.isSameItemSameComponents(pool.prototype, incoming))
             return 0;
 
-        long space = Math.max(0, LinkedItemChannels.Pool.capacityFor(incoming) - pool.count);
+        long space = Math.max(0, pool.capacityFor(incoming) - pool.count);
         long accepted = Math.min(maxAmount, space);
         if (accepted <= 0)
             return 0;

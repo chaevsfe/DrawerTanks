@@ -11,6 +11,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
+import com.texelsaurus.minecraft.chameleon.inventory.ContentMenuProvider;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DyeColor;
@@ -111,7 +113,28 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
 
     @Override
     protected InteractionResult useWithoutItem (BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+        // an empty hand opens the upgrade screen; holding something puts it in
+        if (player.getItemInHand(InteractionHand.MAIN_HAND).isEmpty()) {
+            if (level.isClientSide())
+                return InteractionResult.SUCCESS;
+
+            if (state.getMenuProvider(level, pos) instanceof ContentMenuProvider<?> provider && player instanceof ServerPlayer serverPlayer) {
+                provider.openMenu(serverPlayer);
+                return InteractionResult.SUCCESS;
+            }
+
+            return InteractionResult.PASS;
+        }
+
         return putItems(level, pos, player);
+    }
+
+    @Override
+    protected MenuProvider getMenuProvider (BlockState state, Level level, BlockPos pos) {
+        if (!(level.getBlockEntity(pos) instanceof BlockEntityLinkedDrawer drawer))
+            return null;
+
+        return new BlockEntityLinkedDrawer.ContentProvider(drawer);
     }
 
     // Right-click puts the held stack in; sneak is the take modifier, matching Storage Drawers.
