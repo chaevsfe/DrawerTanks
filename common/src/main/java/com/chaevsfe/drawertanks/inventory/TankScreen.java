@@ -27,7 +27,7 @@ public class TankScreen extends AbstractContainerScreen<ContainerTank>
     private static final int GAUGE_Y = 18;
     private static final int GAUGE_W = 16;
     // right edge of the label area minus the gauge, so text can never sit on top of the gauge
-    private static final int LABEL_MAX_WIDTH = 168 - (GAUGE_X + GAUGE_W + 3);
+    private static final int LABEL_MAX_WIDTH = 161 - (GAUGE_X + GAUGE_W + 3);
     private static final int GAUGE_H = 56;
 
     private final Inventory inventory;
@@ -142,7 +142,7 @@ public class TankScreen extends AbstractContainerScreen<ContainerTank>
     }
 
     private void drawRight (GuiGraphicsExtractor graphics, String text, int y) {
-        int x = Math.max(GAUGE_X + GAUGE_W + 3, 168 - this.font.width(text));
+        int x = Math.max(GAUGE_X + GAUGE_W + 3, 161 - this.font.width(text));
         graphics.text(this.font, text, x, y, 0xFF404040, false);
     }
 

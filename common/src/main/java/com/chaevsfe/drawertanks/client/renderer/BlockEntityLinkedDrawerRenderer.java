@@ -104,6 +104,9 @@ public class BlockEntityLinkedDrawerRenderer implements BlockEntityRenderer<Bloc
         if (renderState.channelSprites != null)
             submitNodeCollector.submitCustomGeometry(poseStack, RenderTypes.solidMovingBlock(), new Strips(renderState));
 
+        if (renderState.lockSprite != null)
+            submitNodeCollector.submitCustomGeometry(poseStack, RenderTypes.cutoutMovingBlock(), new LockIcon(renderState));
+
         if (renderState.itemState != null && !renderState.itemState.isEmpty()) {
             poseStack.pushPose();
             poseStack.translate(0.5f, 0.5f, 1f - FRONT_RECESS + 0.0025f);
@@ -138,22 +141,45 @@ public class BlockEntityLinkedDrawerRenderer implements BlockEntityRenderer<Bloc
         return sideRotationY2D[side.ordinal()] * 90 * (float) Math.PI / 180f;
     }
 
+    // Storage Drawers puts its lock on the front trim, so ours goes there too; cutout keeps the
+    // block face behind it instead of filling the transparent pixels
+    record LockIcon(LinkedDrawerRenderState renderState) implements SubmitNodeCollector.CustomGeometryRenderer
+    {
+        @Override
+        public void render (PoseStack.Pose pose, VertexConsumer vertexConsumer) {
+            Matrix4f matrix = pose.pose();
+            var lock = renderState.lockSprite;
+            float z = 1f + 0.002f;
+            float x1 = 7f * UNIT;
+            float x2 = 9f * UNIT;
+            float y1 = 12.4f * UNIT;
+            float y2 = 15.6f * UNIT;
+
+            face(matrix, pose, vertexConsumer, renderState.lightCoords, x1, y1, x2, y2, z,
+                lock.getU0(), lock.getV0(), lock.getU1(), lock.getV1());
+        }
+
+        private static void face (Matrix4f matrix, PoseStack.Pose pose, VertexConsumer buffer, int light,
+                                  float x1, float y1, float x2, float y2, float z,
+                                  float u0, float v0, float u1, float v1) {
+            vertex(matrix, pose, buffer, light, x1, y1, z, u0, v1);
+            vertex(matrix, pose, buffer, light, x2, y1, z, u1, v1);
+            vertex(matrix, pose, buffer, light, x2, y2, z, u1, v0);
+            vertex(matrix, pose, buffer, light, x1, y2, z, u0, v0);
+        }
+
+        private static void vertex (Matrix4f matrix, PoseStack.Pose pose, VertexConsumer buffer, int light,
+                                    float x, float y, float z, float u, float v) {
+            buffer.addVertex(matrix, x, y, z).setColor(1f, 1f, 1f, 1f).setUv(u, v).setLight(light).setNormal(pose, 0, 0, 1);
+        }
+    }
+
     record Strips(LinkedDrawerRenderState renderState) implements SubmitNodeCollector.CustomGeometryRenderer
     {
         @Override
         public void render (PoseStack.Pose pose, VertexConsumer vertexConsumer) {
             Matrix4f matrix = pose.pose();
             int light = renderState.lightCoords;
-
-            if (renderState.lockSprite != null) {
-                // sits just proud of the strips, centred on the lid
-                float ly = 1f + UNIT + 0.001f;
-                var lock = renderState.lockSprite;
-                quad(matrix, pose, vertexConsumer, light,
-                    5.5f * UNIT, ly, 4 * UNIT, 5.5f * UNIT, ly, 12 * UNIT,
-                    10.5f * UNIT, ly, 12 * UNIT, 10.5f * UNIT, ly, 4 * UNIT,
-                    lock.getU0(), lock.getV0(), lock.getU1(), lock.getV1());
-            }
 
             for (int i = 0; i < renderState.channelSprites.length; i++) {
                 var sprite = renderState.channelSprites[i];

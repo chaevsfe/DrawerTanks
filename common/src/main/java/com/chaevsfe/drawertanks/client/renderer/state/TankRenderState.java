@@ -14,6 +14,7 @@ public class TankRenderState extends BlockEntityRenderState
     public int color = 0xFFFFFFFF;
     public String amountText;
     public TextureAtlasSprite[] channelSprites;
+    public TextureAtlasSprite lockSprite;
 
     public TankRenderState () { }
 }

@@ -69,6 +69,7 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
         renderState.lightCoords = (renderState.lightCoords & 0xFFFF0000) | enforcedBlockLight;
 
         renderState.channelSprites = null;
+        renderState.lockSprite = null;
         if (blockEntity instanceof BlockEntityLinkedTank linked) {
             var channels = linked.getChannels();
             var sprites = new TextureAtlasSprite[channels.length];
@@ -78,6 +79,10 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
                     Identifier.withDefaultNamespace("block/" + color.getSerializedName() + "_wool")));
             }
             renderState.channelSprites = sprites;
+            if (linked.isChannelLocked()) {
+                renderState.lockSprite = Minecraft.getInstance().getAtlasManager().get(new SpriteId(TextureAtlas.LOCATION_BLOCKS,
+                    Identifier.fromNamespaceAndPath("storagedrawers", "block/indicator/lock_icon")));
+            }
         }
 
         TankData data = blockEntity.tankData();
@@ -131,6 +136,9 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
         if (drawStuds)
             submitNodeCollector.submitCustomGeometry(poseStack, RenderTypes.solidMovingBlock(), new ChannelStuds(renderState));
 
+        if (renderState.lockSprite != null)
+            submitNodeCollector.submitCustomGeometry(poseStack, RenderTypes.cutoutMovingBlock(), new LockIcon(renderState));
+
         if (drawFluid)
             submitNodeCollector.submitCustomGeometry(poseStack, RenderTypes.translucentMovingBlock(), new FluidQuad(renderState));
 
@@ -165,6 +173,32 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
 
     private float getRotationYForSide2D (Direction side) {
         return sideRotationY2D[side.ordinal()] * 90 * (float) Math.PI / 180f;
+    }
+
+    // matches the linked drawer: Storage Drawers' lock indicator on the front trim
+    record LockIcon(TankRenderState renderState) implements SubmitNodeCollector.CustomGeometryRenderer
+    {
+        @Override
+        public void render (PoseStack.Pose pose, VertexConsumer vertexConsumer) {
+            Matrix4f matrix = pose.pose();
+            var lock = renderState.lockSprite;
+            float z = 1f + 0.002f;
+            float x1 = 7f * UNIT;
+            float x2 = 9f * UNIT;
+            float y1 = 12.4f * UNIT;
+            float y2 = 15.6f * UNIT;
+            int light = renderState.lightCoords;
+
+            vertex(matrix, pose, vertexConsumer, light, x1, y1, z, lock.getU0(), lock.getV1());
+            vertex(matrix, pose, vertexConsumer, light, x2, y1, z, lock.getU1(), lock.getV1());
+            vertex(matrix, pose, vertexConsumer, light, x2, y2, z, lock.getU1(), lock.getV0());
+            vertex(matrix, pose, vertexConsumer, light, x1, y2, z, lock.getU0(), lock.getV0());
+        }
+
+        private static void vertex (Matrix4f matrix, PoseStack.Pose pose, VertexConsumer buffer, int light,
+                                    float x, float y, float z, float u, float v) {
+            buffer.addVertex(matrix, x, y, z).setColor(1f, 1f, 1f, 1f).setUv(u, v).setLight(light).setNormal(pose, 0, 0, 1);
+        }
     }
 
     record ChannelStuds(TankRenderState renderState) implements SubmitNodeCollector.CustomGeometryRenderer
