@@ -8,9 +8,9 @@ object Properties {
 
     const val maintainer = "chaevsfe"
 
-    const val modrinthProjectId = ""
+    const val modrinthProjectId = "EqkdxKFN"
 
-    const val homepageUrl = "https://github.com/chaevsfe/DrawerTanks"
+    const val homepageUrl = "https://modrinth.com/project/EqkdxKFN"
     const val sourcesUrl = "https://github.com/chaevsfe/DrawerTanks"
     const val issuesUrl = "https://github.com/chaevsfe/DrawerTanks/issues"
     const val modid = "drawertanks"
