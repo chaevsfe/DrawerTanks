@@ -81,13 +81,9 @@ def pad_to_16(img):
 
 
 def chest_side_16():
-    # the chest side as seen in world: lid strip (with the opening seam) over the base
-    lid = ENDER_TEX.crop((0, 14, 14, 19))
+    # uniform chest-base texture; no lid seam, since nothing on these blocks lifts open
     base = ENDER_TEX.crop((0, 33, 14, 43))
-    face = Image.new("RGBA", (14, 15))
-    face.paste(lid, (0, 0))
-    face.paste(base, (0, 5))
-    return pad_to_16(face)
+    return pad_to_16(base.resize((14, 14), Image.NEAREST))
 
 
 def chest_top_16():
@@ -198,6 +194,7 @@ def make_linked_drawer_front(side_img, sd_res):
 
 def linked_drawer_model():
     side = "drawertanks:block/linked_tank_side"
+    depth = 1.5
     return {
         "parent": "block/block",
         "textures": {
@@ -210,14 +207,31 @@ def linked_drawer_model():
             {
                 "from": [0, 0, 0], "to": [16, 16, 16],
                 "faces": {
-                    "north": {"uv": [0, 0, 16, 16], "texture": "#front", "cullface": "north"},
                     "south": {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "south"},
                     "east": {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "east"},
                     "west": {"uv": [0, 0, 16, 16], "texture": "#side", "cullface": "west"},
                     "up": {"uv": [0, 0, 16, 16], "texture": "#top", "cullface": "up"},
                     "down": {"uv": [0, 0, 16, 16], "texture": "#top", "cullface": "down"}
                 }
-            }
+            },
+            {"from": [0, 14, 0], "to": [16, 16, 0],
+             "faces": {"north": {"uv": [0, 0, 16, 2], "texture": "#front", "cullface": "north"}}},
+            {"from": [0, 0, 0], "to": [16, 2, 0],
+             "faces": {"north": {"uv": [0, 14, 16, 16], "texture": "#front", "cullface": "north"}}},
+            {"from": [0, 2, 0], "to": [2, 14, 0],
+             "faces": {"north": {"uv": [14, 2, 16, 14], "texture": "#front", "cullface": "north"}}},
+            {"from": [14, 2, 0], "to": [16, 14, 0],
+             "faces": {"north": {"uv": [0, 2, 2, 14], "texture": "#front", "cullface": "north"}}},
+            {"from": [2, 2, depth], "to": [14, 14, depth],
+             "faces": {"north": {"uv": [2, 2, 14, 14], "texture": "#front"}}},
+            {"from": [2, 14, 0], "to": [14, 14, depth],
+             "faces": {"down": {"uv": [2, 0, 14, depth], "texture": "#side"}}},
+            {"from": [2, 2, 0], "to": [14, 2, depth],
+             "faces": {"up": {"uv": [2, 0, 14, depth], "texture": "#side"}}},
+            {"from": [2, 2, 0], "to": [2, 14, depth],
+             "faces": {"east": {"uv": [0, 2, depth, 14], "texture": "#side"}}},
+            {"from": [14, 2, 0], "to": [14, 14, depth],
+             "faces": {"west": {"uv": [0, 2, depth, 14], "texture": "#side"}}}
         ]
     }
 

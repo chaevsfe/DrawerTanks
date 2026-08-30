@@ -35,6 +35,7 @@ import org.joml.Matrix4f;
 public class BlockEntityLinkedDrawerRenderer implements BlockEntityRenderer<BlockEntityLinkedDrawer, LinkedDrawerRenderState>
 {
     private static final float UNIT = 0.0625f;
+    private static final float FRONT_RECESS = 1.5f * 0.0625f;
     private static final Matrix3f ITEM_LIGHT_ROTATION_3D = (new Matrix3f()).rotationYXZ(.36f, -.36f, -.014f);
     private static final float[] sideRotationY2D = { 0, 0, 2, 0, 3, 1 };
 
@@ -98,7 +99,7 @@ public class BlockEntityLinkedDrawerRenderer implements BlockEntityRenderer<Bloc
 
         if (renderState.itemState != null && !renderState.itemState.isEmpty()) {
             poseStack.pushPose();
-            poseStack.translate(0.5f, 0.5f, 1.0025f);
+            poseStack.translate(0.5f, 0.5f, 1f - FRONT_RECESS + 0.0025f);
             poseStack.mulPose((new Matrix4f()).scale(10 / 16f, 10 / 16f, 0.001f));
             poseStack.last().trustedNormals = true;
             poseStack.last().normal().rotateYXZ(-getRotationYForSide2D(side), 0, 0).mul(ITEM_LIGHT_ROTATION_3D);
@@ -108,7 +109,7 @@ public class BlockEntityLinkedDrawerRenderer implements BlockEntityRenderer<Bloc
 
         if (renderState.countText != null) {
             poseStack.pushPose();
-            poseStack.translate(0.5f, 0.28f, 1.005f);
+            poseStack.translate(0.5f, 0.28f, 1f - FRONT_RECESS + 0.005f);
             poseStack.scale(1 / 128f, -1 / 128f, 1);
             int width = font.width(renderState.countText);
             submitNodeCollector.submitText(poseStack, -width / 2f, 0,
