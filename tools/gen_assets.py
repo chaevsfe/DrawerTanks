@@ -91,7 +91,11 @@ def chest_side_16():
 
 
 def chest_top_16():
-    return pad_to_16(ENDER_TEX.crop((14, 0, 28, 14)))
+    # lid top inset in a clean dark border rather than stretched edge pixels
+    lid = ENDER_TEX.crop((14, 0, 28, 14))
+    out = Image.new("RGBA", (16, 16), (12, 19, 20, 255))
+    out.paste(lid, (1, 1))
+    return out
 
 
 def ender_body(x, y):
