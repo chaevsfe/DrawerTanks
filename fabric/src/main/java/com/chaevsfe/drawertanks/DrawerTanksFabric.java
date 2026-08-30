@@ -19,6 +19,7 @@ import com.texelsaurus.minecraft.chameleon.api.ChameleonInit;
 import com.texelsaurus.minecraft.chameleon.capabilities.IFabricCapability;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -54,6 +55,17 @@ public class DrawerTanksFabric implements ModInitializer
         FluidStorage.SIDED.registerForBlockEntity((be, dir) -> TankFluidStorage.of(be), ModBlockEntities.LINKED_TANK.get());
         FluidStorage.SIDED.registerForBlockEntity((be, dir) -> TankFluidStorage.of(be), ModBlockEntities.FRAMED_TANK.get());
         ItemStorage.SIDED.registerForBlockEntity((be, dir) -> LinkedDrawerItemStorage.of(be), ModBlockEntities.LINKED_DRAWER.get());
+
+        UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
+            if (hand != InteractionHand.MAIN_HAND || !player.isShiftKeyDown() || player.getItemInHand(hand).isEmpty())
+                return InteractionResult.PASS;
+
+            var pos = hitResult.getBlockPos();
+            if (!(world.getBlockState(pos).getBlock() instanceof BlockLinkedDrawer block))
+                return InteractionResult.PASS;
+
+            return block.putItems(world, pos, player);
+        });
 
         AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
             var state = world.getBlockState(pos);

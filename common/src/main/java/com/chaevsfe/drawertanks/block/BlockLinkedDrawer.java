@@ -104,8 +104,22 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
             return InteractionResult.PASS;
         }
 
+        // Insertion happens in useWithoutItem, the way Storage Drawers does it: vanilla skips
+        // useItemOn when the player sneaks with a full hand, so doing it here breaks shift-click.
+        return InteractionResult.TRY_WITH_EMPTY_HAND;
+    }
+
+    @Override
+    protected InteractionResult useWithoutItem (BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+        return putItems(level, pos, player);
+    }
+
+    // Vanilla skips the whole block interaction when a player sneaks with a full hand, so the
+    // loaders call this directly from their right-click events to make shift-insert work.
+    public InteractionResult putItems (Level level, BlockPos pos, Player player) {
+        ItemStack stack = player.getItemInHand(InteractionHand.MAIN_HAND);
         if (stack.isEmpty())
-            return InteractionResult.TRY_WITH_EMPTY_HAND;
+            return InteractionResult.PASS;
 
         if (level.isClientSide())
             return InteractionResult.SUCCESS;
@@ -120,18 +134,40 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
         if (!pool.isEmpty() && !ItemStack.isSameItemSameComponents(pool.prototype, stack))
             return InteractionResult.FAIL;
 
+        // sneaking dumps every matching stack in the inventory, like a drawer
+        int moved = insert(drawer, pool, stack);
+        if (player.isShiftKeyDown()) {
+            for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+                ItemStack other = player.getInventory().getItem(i);
+                if (other != stack && !other.isEmpty() && ItemStack.isSameItemSameComponents(pool.prototype, other))
+                    moved += insert(drawer, pool, other);
+            }
+        }
+
+        if (moved <= 0)
+            return InteractionResult.FAIL;
+
+        drawer.onPoolChanged();
+        return InteractionResult.SUCCESS;
+    }
+
+    private static int insert (BlockEntityLinkedDrawer drawer, LinkedItemChannels.Pool pool, ItemStack stack) {
+        if (stack.isEmpty())
+            return 0;
+        if (!pool.isEmpty() && !ItemStack.isSameItemSameComponents(pool.prototype, stack))
+            return 0;
+
         long space = drawer.capacityItems(stack) - pool.count;
         int moved = (int) Math.min(space, stack.getCount());
         if (moved <= 0)
-            return InteractionResult.FAIL;
+            return 0;
 
         if (pool.isEmpty())
             pool.set(stack, moved);
         else
             pool.count += moved;
         stack.shrink(moved);
-        drawer.onPoolChanged();
-        return InteractionResult.SUCCESS;
+        return moved;
     }
 
     public void takeItem (Level level, BlockPos pos, Player player, boolean single) {
