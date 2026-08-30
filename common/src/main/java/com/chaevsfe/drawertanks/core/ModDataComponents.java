@@ -1,6 +1,7 @@
 package com.chaevsfe.drawertanks.core;
 
 import com.chaevsfe.drawertanks.ModConstants;
+import com.chaevsfe.drawertanks.components.TankAttributesData;
 import com.chaevsfe.drawertanks.components.TankContents;
 import com.chaevsfe.drawertanks.components.TankUpgrades;
 import com.texelsaurus.minecraft.chameleon.ChameleonServices;
@@ -25,6 +26,10 @@ public final class ModDataComponents
     public static final RegistryEntry<DataComponentType<TankUpgrades>> TANK_UPGRADES =
         COMPONENTS.register("tank_upgrades", () -> DataComponentType.<TankUpgrades>builder()
             .persistent(TankUpgrades.CODEC).build());
+
+    public static final RegistryEntry<DataComponentType<TankAttributesData>> TANK_ATTRIBUTES =
+        COMPONENTS.register("tank_attributes", () -> DataComponentType.<TankAttributesData>builder()
+            .persistent(TankAttributesData.CODEC).networkSynchronized(TankAttributesData.STREAM_CODEC).build());
 
     // the five dye ids of a linked block, so breaking one does not orphan its channel
     public static final RegistryEntry<DataComponentType<List<Integer>>> LINK_CHANNELS =

@@ -78,6 +78,11 @@ public class BlockFramedTank extends BlockTank implements IFramedBlock
         if (!upgrades.isEmpty())
             drop.set(ModDataComponents.TANK_UPGRADES.get(), new com.chaevsfe.drawertanks.components.TankUpgrades(upgrades));
 
+        com.chaevsfe.drawertanks.components.TankAttributesData attrs =
+            new com.chaevsfe.drawertanks.components.TankAttributesData(tank.isFluidLocked(), tank.isConcealed(), tank.isShowingQuantity());
+        if (!attrs.isEmpty())
+            drop.set(ModDataComponents.TANK_ATTRIBUTES.get(), attrs);
+
         return drop;
     }
 

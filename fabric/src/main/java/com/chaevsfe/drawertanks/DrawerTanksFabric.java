@@ -21,6 +21,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil;
@@ -65,10 +66,11 @@ public class DrawerTanksFabric implements ModInitializer
             return InteractionResult.PASS;
         });
 
-        IFabricCapability<IDrawerAttributes> attributesCapability = (IFabricCapability<IDrawerAttributes>) Capabilities.DRAWER_ATTRIBUTES;
-        attributesCapability.register(ModBlockEntities.TANK.get(), be -> be.getDrawerAttributes());
-        attributesCapability.register(ModBlockEntities.LINKED_TANK.get(), be -> be.getDrawerAttributes());
-        attributesCapability.register(ModBlockEntities.FRAMED_TANK.get(), be -> be.getDrawerAttributes());
+        // Chameleon's DeferredCapability silently drops a register() call until Storage Drawers has
+        // published the backing capability from its own initializer, so run this again once every
+        // mod's entrypoint has finished.
+        registerDrawerAttributes();
+        ServerLifecycleEvents.SERVER_STARTING.register(server -> registerDrawerAttributes());
 
         Bridges.FLUID = new FluidBridge()
         {
@@ -87,5 +89,13 @@ public class DrawerTanksFabric implements ModInitializer
                 return FluidStorageUtil.interactWithFluidStorage(TankFluidStorage.of(tank), player, hand);
             }
         };
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void registerDrawerAttributes () {
+        IFabricCapability<IDrawerAttributes> capability = (IFabricCapability<IDrawerAttributes>) Capabilities.DRAWER_ATTRIBUTES;
+        capability.register(ModBlockEntities.TANK.get(), be -> be.getDrawerAttributes());
+        capability.register(ModBlockEntities.LINKED_TANK.get(), be -> be.getDrawerAttributes());
+        capability.register(ModBlockEntities.FRAMED_TANK.get(), be -> be.getDrawerAttributes());
     }
 }

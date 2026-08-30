@@ -1,6 +1,7 @@
 package com.chaevsfe.drawertanks.block.tile;
 
 import com.chaevsfe.drawertanks.block.tile.tiledata.TankData;
+import com.chaevsfe.drawertanks.components.TankAttributesData;
 import com.chaevsfe.drawertanks.components.TankContents;
 import com.chaevsfe.drawertanks.components.TankUpgrades;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
@@ -280,6 +281,14 @@ public class BlockEntityTank extends BaseBlockEntity
     protected void applyImplicitComponents (DataComponentGetter input) {
         super.applyImplicitComponents(input);
 
+        TankAttributesData attrs = input.get(ModDataComponents.TANK_ATTRIBUTES.get());
+        if (attrs != null) {
+            attributes.setItemLocked(LockAttribute.LOCK_EMPTY, attrs.locked());
+            attributes.setItemLocked(LockAttribute.LOCK_POPULATED, attrs.locked());
+            attributes.setIsConcealed(attrs.concealed());
+            attributes.setIsShowingQuantity(attrs.showQuantity());
+        }
+
         tankData.fromContents(input.get(ModDataComponents.TANK_CONTENTS.get()));
 
         TankUpgrades upgrades = input.get(ModDataComponents.TANK_UPGRADES.get());
@@ -297,6 +306,11 @@ public class BlockEntityTank extends BaseBlockEntity
 
         if (!tankData.isEmpty())
             builder.set(ModDataComponents.TANK_CONTENTS.get(), tankData.toContents());
+
+        TankAttributesData attrs = new TankAttributesData(attributes.isItemLocked(LockAttribute.LOCK_EMPTY),
+            attributes.isConcealed(), attributes.isShowingQuantity());
+        if (!attrs.isEmpty())
+            builder.set(ModDataComponents.TANK_ATTRIBUTES.get(), attrs);
 
         List<ItemStackWithSlot> upgrades = new ArrayList<>();
         for (int i = 0; i < upgradeData.getSlotCount(); i++) {

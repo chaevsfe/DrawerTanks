@@ -18,7 +18,8 @@
                             "source": "block_entity",
                             "include": [
                                 "drawertanks:tank_contents",
-                                "drawertanks:tank_upgrades"
+                                "drawertanks:tank_upgrades",
+                                "drawertanks:tank_attributes"
                             ]
                         }
                     ]
