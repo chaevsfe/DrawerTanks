@@ -68,7 +68,11 @@ public class ClientModBusSubscriber
                 FluidModel model = Minecraft.getInstance().getModelManager().getFluidStateModelSet().get(fluid.defaultFluidState());
                 if (model == null)
                     return 0xFFFFFFFF;
-                return model.fluidTintSource().colorAsStack(FluidResource.of(fluid, components).toStack(1));
+                // lava, milk and any fluid registered without a tint have a null source
+                var tint = model.fluidTintSource();
+                if (tint == null)
+                    return 0xFFFFFFFF;
+                return tint.colorAsStack(FluidResource.of(fluid, components).toStack(1));
             }
 
             @Override
