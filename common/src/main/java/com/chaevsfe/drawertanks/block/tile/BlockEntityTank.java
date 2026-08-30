@@ -224,6 +224,10 @@ public class BlockEntityTank extends BaseBlockEntity
     }
 
     public static long computeCapacityDroplets (Iterable<ItemStack> upgrades) {
+        return computeCapacityDroplets(upgrades, TankConfig.baseCapacityBuckets);
+    }
+
+    public static long computeCapacityDroplets (Iterable<ItemStack> upgrades, int baseBuckets) {
         boolean unlimited = false;
         boolean oneStack = false;
         int multiplier = 0;
@@ -248,7 +252,7 @@ public class BlockEntityTank extends BaseBlockEntity
         if (multiplier == 0)
             multiplier = ModCommonConfig.INSTANCE.UPGRADES.getLevelMult(0);
 
-        long buckets = oneStack ? 1 : (long) TankConfig.baseCapacityBuckets * multiplier;
+        long buckets = oneStack ? 1 : (long) baseBuckets * multiplier;
         return buckets * DROPLETS_PER_BUCKET;
     }
 

@@ -9,6 +9,7 @@ import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
@@ -105,6 +106,17 @@ public class BlockEntityLinkedTank extends BlockEntityTank
     public com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.UpgradeData upgrades () {
         LinkedChannels.Pool pool = pool();
         return pool != null ? pool.upgrades : super.upgrades();
+    }
+
+    // the base and the upgrade list both come from the channel, not from this block
+    @Override
+    public long capacityDropletsWithSwap (int slot, ItemStack incoming) {
+        com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.UpgradeData source = upgrades();
+        java.util.List<net.minecraft.world.item.ItemStack> list = new ArrayList<>();
+        for (int i = 0; i < source.getSlotCount(); i++)
+            list.add(i == slot ? incoming : source.getUpgrade(i));
+
+        return computeCapacityDroplets(list, TankConfig.linkedChannelCapacityBuckets);
     }
 
     @Override
