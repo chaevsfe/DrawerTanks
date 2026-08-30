@@ -24,7 +24,7 @@ public class ContainerTank extends AbstractContainerMenu
     private static final int UpgradeX = 26;
     private static final int UpgradeY = 86;
     private static final int DisplayX = 80;
-    private static final int DisplayY = 38;
+    private static final int DisplayY = 36;
 
     @Nullable
     private final UpgradeHost tank;

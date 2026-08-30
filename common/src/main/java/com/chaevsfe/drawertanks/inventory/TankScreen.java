@@ -19,7 +19,9 @@ import net.minecraft.world.inventory.Slot;
 public class TankScreen extends AbstractContainerScreen<ContainerTank>
 {
     private static final Identifier BACKGROUND = ModConstants.loc("textures/gui/tank.png");
-    private static final Identifier DRAWER_BACKGROUND = ModConstants.loc("textures/gui/linked_drawer.png");
+    // the linked drawer borrows Storage Drawers' own 1x1 panel, so it looks exactly like a drawer
+    private static final Identifier DRAWER_BACKGROUND =
+        Identifier.fromNamespaceAndPath("storagedrawers", "textures/gui/drawers_1.png");
 
     private static final int GAUGE_X = 80;
     private static final int GAUGE_Y = 18;
@@ -48,10 +50,6 @@ public class TankScreen extends AbstractContainerScreen<ContainerTank>
             if (slot.container instanceof InventoryTankUpgrade upgrades && upgrades.slotIsLocked(slot.getContainerSlot()))
                 graphics.blit(RenderPipelines.GUI_TEXTURED, background, guiX + slot.x, guiY + slot.y, 176, 0, 16, 16, 256, 256);
         }
-
-        net.minecraft.world.inventory.Slot display = menu.getDisplaySlot();
-        if (display != null)
-            graphics.blit(RenderPipelines.GUI_TEXTURED, background, guiX + display.x - 1, guiY + display.y - 1, 176, 0, 18, 18, 256, 256);
 
         extractFluid(graphics, guiX, guiY);
         extractTicks(graphics, guiX, guiY);
@@ -137,13 +135,10 @@ public class TankScreen extends AbstractContainerScreen<ContainerTank>
         if (!(menu.getTank() instanceof com.chaevsfe.drawertanks.block.tile.BlockEntityLinkedDrawer drawer))
             return;
 
-        if (drawer.displayItem().isEmpty()) {
-            graphics.centeredText(this.font, I18n.get("tooltip.drawertanks.empty"), 88, 60, 0xFF404040);
-            return;
-        }
-
-        String label = compact(drawer.displayCount()) + " / " + compact(drawer.capacityItems());
-        graphics.centeredText(this.font, label, 88, 60, 0xFF404040);
+        net.minecraft.world.item.ItemStack stored = drawer.displayItem();
+        int stackSize = stored.isEmpty() ? 64 : stored.getMaxStackSize();
+        String stacks = compact(drawer.capacityItems() / (double) stackSize);
+        graphics.text(this.font, stacks, 161 - stacks.length() * 6, 42, 0xFF404040, false);
     }
 
     private void drawRight (GuiGraphicsExtractor graphics, String text, int y) {
