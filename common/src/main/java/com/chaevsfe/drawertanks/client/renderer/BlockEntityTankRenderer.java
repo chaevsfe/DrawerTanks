@@ -39,6 +39,7 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
 
     private static final SpriteId STUD_SPRITE = new SpriteId(TextureAtlas.LOCATION_BLOCKS,
         Identifier.withDefaultNamespace("block/white_concrete"));
+    private static final int UNSET_STRIP_COLOR = 0xFF232323;
 
     private final Font font;
 
@@ -70,10 +71,11 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
         renderState.lightCoords = (renderState.lightCoords & 0xFFFF0000) | enforcedBlockLight;
 
         renderState.channelColors = null;
-        if (blockEntity instanceof BlockEntityLinkedTank linked && !linked.getChannels().isEmpty()) {
-            int[] colors = new int[linked.getChannels().size()];
+        if (blockEntity instanceof BlockEntityLinkedTank linked) {
+            var channels = linked.getChannels();
+            int[] colors = new int[channels.length];
             for (int i = 0; i < colors.length; i++)
-                colors[i] = linked.getChannels().get(i).getTextureDiffuseColor();
+                colors[i] = channels[i] == null ? UNSET_STRIP_COLOR : channels[i].getTextureDiffuseColor();
             renderState.channelColors = colors;
             renderState.studSprite = Minecraft.getInstance().getAtlasManager().get(STUD_SPRITE);
         }
@@ -171,23 +173,26 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
             Matrix4f matrix = pose.pose();
             int light = renderState.lightCoords;
 
-            int count = renderState.channelColors.length;
-            float start = (16 - (3 * count - 1)) / 2f;
-            for (int i = 0; i < count; i++) {
+            for (int i = 0; i < renderState.channelColors.length; i++) {
                 int color = renderState.channelColors[i];
                 float r = ((color >> 16) & 0xFF) / 255f;
                 float g = ((color >> 8) & 0xFF) / 255f;
                 float b = (color & 0xFF) / 255f;
-                float x1 = (start + i * 3) * UNIT;
+                float x1 = (1 + i * 3) * UNIT;
                 float x2 = x1 + 2 * UNIT;
-                float y1 = 14 * UNIT;
-                float y2 = 15 * UNIT;
-                float z = 1 + 0.004f;
+                float z1 = 3 * UNIT;
+                float z2 = 13 * UNIT;
+                float y = 1 + 0.0025f;
 
-                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x2, y1, z, u, v, r, g, b, 1f);
-                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x2, y2, z, u, v, r, g, b, 1f);
-                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x1, y2, z, u, v, r, g, b, 1f);
-                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x1, y1, z, u, v, r, g, b, 1f);
+                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x1, y, z1, u, v, r, g, b, 1f);
+                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x1, y, z2, u, v, r, g, b, 1f);
+                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x2, y, z2, u, v, r, g, b, 1f);
+                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x2, y, z1, u, v, r, g, b, 1f);
+
+                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x2, y, z1, u, v, r, g, b, 1f);
+                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x2, y, z2, u, v, r, g, b, 1f);
+                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x1, y, z2, u, v, r, g, b, 1f);
+                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x1, y, z1, u, v, r, g, b, 1f);
             }
         }
     }

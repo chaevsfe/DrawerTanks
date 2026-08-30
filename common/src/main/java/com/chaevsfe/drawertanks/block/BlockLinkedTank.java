@@ -3,6 +3,7 @@ package com.chaevsfe.drawertanks.block;
 import com.chaevsfe.drawertanks.block.tile.BlockEntityLinkedTank;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -39,13 +40,16 @@ public class BlockLinkedTank extends BlockTank
     protected InteractionResult useItemOn (ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         DyeColor dye = dyeFrom(stack);
         if (dye != null) {
+            if (hit.getDirection() != Direction.UP)
+                return InteractionResult.PASS;
+
             if (level.isClientSide())
                 return InteractionResult.SUCCESS;
 
-            if (level.getBlockEntity(pos) instanceof BlockEntityLinkedTank tank && tank.addChannelDye(dye)) {
-                if (!player.hasInfiniteMaterials())
+            if (level.getBlockEntity(pos) instanceof BlockEntityLinkedTank tank) {
+                int strip = stripAt(state.getValue(FACING), hit, pos);
+                if (tank.setChannelDye(strip, dye) && !player.hasInfiniteMaterials())
                     stack.shrink(1);
-                player.sendOverlayMessage(Component.translatable("message.drawertanks.linked.dyed", tank.getChannels().size(), BlockEntityLinkedTank.MAX_DYES));
                 return InteractionResult.SUCCESS;
             }
 
@@ -65,6 +69,21 @@ public class BlockLinkedTank extends BlockTank
         }
 
         return super.useItemOn(stack, state, level, pos, player, hand, hit);
+    }
+
+    // map the clicked point on the lid into the renderer's aligned frame, so the dyed strip
+    // is the one under the cursor for every facing
+    private static int stripAt (Direction facing, BlockHitResult hit, BlockPos pos) {
+        double wx = hit.getLocation().x - pos.getX();
+        double wz = hit.getLocation().z - pos.getZ();
+        double across = switch (facing) {
+            case NORTH -> 1 - wx;
+            case EAST -> 1 - wz;
+            case WEST -> wz;
+            default -> wx;
+        };
+        int px = (int) Math.floor(across * 16);
+        return Math.max(0, Math.min(BlockEntityLinkedTank.STRIPS - 1, (px - 1) / 3));
     }
 
     private static DyeColor dyeFrom (ItemStack stack) {

@@ -18,9 +18,9 @@ import java.util.List;
 
 public class BlockEntityLinkedTank extends BlockEntityTank
 {
-    public static final int MAX_DYES = 5;
+    public static final int STRIPS = 5;
 
-    private final List<DyeColor> channels = new ArrayList<>();
+    private final DyeColor[] channels = new DyeColor[STRIPS];
     private long lastSeenVersion = Long.MIN_VALUE;
     private boolean legacyContentsPending;
 
@@ -29,7 +29,7 @@ public class BlockEntityLinkedTank extends BlockEntityTank
         injectData(new LinkData());
     }
 
-    public List<DyeColor> getChannels () {
+    public DyeColor[] getChannels () {
         return channels;
     }
 
@@ -38,26 +38,30 @@ public class BlockEntityLinkedTank extends BlockEntityTank
         for (DyeColor color : channels) {
             if (key.length() > 0)
                 key.append(',');
-            key.append(color.getId());
+            key.append(color == null ? "x" : Integer.toString(color.getId()));
         }
         return key.toString();
     }
 
-    public boolean addChannelDye (DyeColor color) {
-        if (channels.size() >= MAX_DYES)
+    public boolean setChannelDye (int strip, DyeColor color) {
+        if (strip < 0 || strip >= STRIPS || channels[strip] == color)
             return false;
 
-        channels.add(color);
+        channels[strip] = color;
         lastSeenVersion = Long.MIN_VALUE;
         onContentsChanged();
         return true;
     }
 
     public boolean clearChannels () {
-        if (channels.isEmpty())
+        boolean any = false;
+        for (int i = 0; i < STRIPS; i++) {
+            any |= channels[i] != null;
+            channels[i] = null;
+        }
+        if (!any)
             return false;
 
-        channels.clear();
         lastSeenVersion = Long.MIN_VALUE;
         onContentsChanged();
         return true;
@@ -146,13 +150,12 @@ public class BlockEntityLinkedTank extends BlockEntityTank
     {
         @Override
         public void read (ValueInput input) {
-            channels.clear();
-            input.read("Channels", Codec.INT.listOf()).ifPresent(list ->
-                list.forEach(id -> {
-                    DyeColor color = DyeColor.byId(id);
-                    if (color != null && channels.size() < MAX_DYES)
-                        channels.add(color);
-                }));
+            for (int i = 0; i < STRIPS; i++)
+                channels[i] = null;
+            input.read("Channels", Codec.INT.listOf()).ifPresent(list -> {
+                for (int i = 0; i < Math.min(list.size(), STRIPS); i++)
+                    channels[i] = list.get(i) < 0 ? null : DyeColor.byId(list.get(i));
+            });
 
             // worlds from the coupler era stored fluid locally; fold it into the channel pool once
             legacyContentsPending = !input.read("Mirror", Codec.BOOL).orElse(false);
@@ -161,9 +164,12 @@ public class BlockEntityLinkedTank extends BlockEntityTank
         @Override
         public void write (ValueOutput output) {
             List<Integer> ids = new ArrayList<>();
-            for (DyeColor color : channels)
-                ids.add(color.getId());
-            if (!ids.isEmpty())
+            boolean any = false;
+            for (DyeColor color : channels) {
+                ids.add(color == null ? -1 : color.getId());
+                any |= color != null;
+            }
+            if (any)
                 output.store("Channels", Codec.INT.listOf(), ids);
             else
                 output.discard("Channels");

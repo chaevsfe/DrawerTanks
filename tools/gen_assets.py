@@ -442,7 +442,6 @@ def main():
     lang["block.drawertanks.framed_tank"] = "Framed Tank"
     lang["block.drawertanks.meta_tank_side"] = "Tank Side"
     lang["block.drawertanks.linked_tank"] = "Linked Tank"
-    lang["message.drawertanks.linked.dyed"] = "Channel color %s of %s applied"
     lang["message.drawertanks.linked.cleared"] = "Channel colors washed off"
 
     lang["itemGroup.drawertanks"] = "Drawer Tanks"

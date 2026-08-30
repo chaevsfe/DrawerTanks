@@ -16,7 +16,6 @@
     "block.drawertanks.warped_tank": "Warped Tank",
     "itemGroup.drawertanks": "Drawer Tanks",
     "message.drawertanks.linked.cleared": "Channel colors washed off",
-    "message.drawertanks.linked.dyed": "Channel color %s of %s applied",
     "tooltip.drawertanks.capacity": "Capacity: %s B",
     "tooltip.drawertanks.contents": "%s: %s / %s B",
     "tooltip.drawertanks.empty": "Empty"
