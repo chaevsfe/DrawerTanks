@@ -3,13 +3,15 @@ package com.chaevsfe.drawertanks.block;
 import com.chaevsfe.drawertanks.block.tile.BlockEntityTank;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
 import com.chaevsfe.drawertanks.platform.Bridges;
-import com.jaquadro.minecraft.storagedrawers.core.ModItems;
 import com.jaquadro.minecraft.storagedrawers.item.ItemUpgrade;
 import com.mojang.serialization.MapCodec;
+import com.texelsaurus.minecraft.chameleon.inventory.ContentMenuProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -70,8 +72,7 @@ public class BlockTank extends HorizontalDirectionalBlock implements EntityBlock
             if (!(level.getBlockEntity(pos) instanceof BlockEntityTank tank))
                 return InteractionResult.PASS;
 
-            if (stack.getItem() == ModItems.ONE_STACK_UPGRADE.get()
-                && tank.tankData().getAmount() > BlockEntityTank.DROPLETS_PER_BUCKET)
+            if (!tank.upgradeFitsContents(stack))
                 return InteractionResult.PASS;
 
             if (!tank.upgrades().canAddUpgrade(stack))
@@ -103,21 +104,26 @@ public class BlockTank extends HorizontalDirectionalBlock implements EntityBlock
 
     @Override
     protected InteractionResult useWithoutItem (BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-        if (!player.isShiftKeyDown() || !player.getMainHandItem().isEmpty())
-            return InteractionResult.PASS;
-
-        if (!(level.getBlockEntity(pos) instanceof BlockEntityTank tank))
+        if (!player.isShiftKeyDown())
             return InteractionResult.PASS;
 
         if (level.isClientSide())
-            return tank.hasAnyUpgrade() ? InteractionResult.SUCCESS : InteractionResult.PASS;
+            return InteractionResult.SUCCESS;
 
-        ItemStack removed = tank.tryRemoveUpgrade();
-        if (removed.isEmpty())
-            return InteractionResult.PASS;
+        if (state.getMenuProvider(level, pos) instanceof ContentMenuProvider<?> provider && player instanceof ServerPlayer serverPlayer) {
+            provider.openMenu(serverPlayer);
+            return InteractionResult.SUCCESS;
+        }
 
-        player.getInventory().placeItemBackInInventory(removed);
-        return InteractionResult.SUCCESS;
+        return InteractionResult.PASS;
+    }
+
+    @Override
+    protected MenuProvider getMenuProvider (BlockState state, Level level, BlockPos pos) {
+        if (!(level.getBlockEntity(pos) instanceof BlockEntityTank tank))
+            return null;
+
+        return new BlockEntityTank.ContentProvider(tank);
     }
 
     @Override

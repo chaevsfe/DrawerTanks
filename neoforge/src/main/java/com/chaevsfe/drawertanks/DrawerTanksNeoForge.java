@@ -2,6 +2,7 @@ package com.chaevsfe.drawertanks;
 
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
 import com.chaevsfe.drawertanks.core.ModBlocks;
+import com.chaevsfe.drawertanks.core.ModContainers;
 import com.chaevsfe.drawertanks.core.ModDataComponents;
 import com.chaevsfe.drawertanks.core.ModItems;
 import com.chaevsfe.drawertanks.inventory.TankResourceHandler;
@@ -39,6 +40,7 @@ public class DrawerTanksNeoForge
         ModBlocks.init(context);
         ModItems.init(context);
         ModBlockEntities.init(context);
+        ModContainers.init(context);
         ModDataComponents.init(context);
 
         modEventBus.addListener(this::registerCapabilities);

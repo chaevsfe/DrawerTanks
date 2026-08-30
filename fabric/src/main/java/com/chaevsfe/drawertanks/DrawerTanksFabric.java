@@ -3,6 +3,7 @@ package com.chaevsfe.drawertanks;
 import com.chaevsfe.drawertanks.block.tile.BlockEntityTank;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
 import com.chaevsfe.drawertanks.core.ModBlocks;
+import com.chaevsfe.drawertanks.core.ModContainers;
 import com.chaevsfe.drawertanks.core.ModCreativeTabs;
 import com.chaevsfe.drawertanks.core.ModDataComponents;
 import com.chaevsfe.drawertanks.core.ModItems;
@@ -30,6 +31,7 @@ public class DrawerTanksFabric implements ModInitializer
         ModBlocks.init(context);
         ModItems.init(context);
         ModBlockEntities.init(context);
+        ModContainers.init(context);
         ModDataComponents.init(context);
 
         ModCreativeTabs.init();

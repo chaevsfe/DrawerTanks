@@ -5,13 +5,24 @@ import com.chaevsfe.drawertanks.components.TankContents;
 import com.chaevsfe.drawertanks.components.TankUpgrades;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
 import com.chaevsfe.drawertanks.core.ModDataComponents;
+import com.chaevsfe.drawertanks.inventory.ContainerTank;
 import com.jaquadro.minecraft.storagedrawers.block.tile.BaseBlockEntity;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.UpgradeData;
 import com.jaquadro.minecraft.storagedrawers.capabilities.BasicDrawerAttributes;
+import com.jaquadro.minecraft.storagedrawers.config.ModCommonConfig;
+import com.jaquadro.minecraft.storagedrawers.item.ItemUpgradeStorage;
+import com.texelsaurus.minecraft.chameleon.inventory.ContentMenuProvider;
+import com.texelsaurus.minecraft.chameleon.inventory.content.PositionContent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponentGetter;
 import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.ItemStackWithSlot;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -104,32 +115,66 @@ public class BlockEntityTank extends BaseBlockEntity
             syncPending = true;
     }
 
-    public boolean hasAnyUpgrade () {
-        for (int i = 0; i < upgradeData.getSlotCount(); i++) {
-            if (!upgradeData.getUpgrade(i).isEmpty())
-                return true;
-        }
-        return false;
+    public boolean upgradeFitsContents (ItemStack upgrade) {
+        if (upgrade.getItem() == com.jaquadro.minecraft.storagedrawers.core.ModItems.ONE_STACK_UPGRADE.get())
+            return tankData.getAmount() <= DROPLETS_PER_BUCKET;
+        return true;
     }
 
-    public ItemStack tryRemoveUpgrade () {
-        for (int i = upgradeData.getSlotCount() - 1; i >= 0; i--) {
-            ItemStack upgrade = upgradeData.getUpgrade(i);
-            if (upgrade.isEmpty())
+    public long capacityDropletsWithout (int slot) {
+        boolean unlimited = false;
+        boolean oneStack = false;
+        int multiplier = 0;
+
+        for (int i = 0; i < upgradeData.getSlotCount(); i++) {
+            if (i == slot)
                 continue;
 
-            if (!upgradeData.setUpgrade(i, ItemStack.EMPTY))
-                continue;
-
-            if (tankData.getAmount() > capacityDroplets()) {
-                upgradeData.forceSetUpgrade(i, upgrade);
-                continue;
-            }
-
-            return upgrade;
+            Item item = upgradeData.getUpgrade(i).getItem();
+            if (item instanceof ItemUpgradeStorage storage)
+                multiplier += ModCommonConfig.INSTANCE.UPGRADES.getLevelMult(storage.level.getLevel());
+            else if (item == com.jaquadro.minecraft.storagedrawers.core.ModItems.CREATIVE_STORAGE_UPGRADE.get()
+                || item == com.jaquadro.minecraft.storagedrawers.core.ModItems.CREATIVE_VENDING_UPGRADE.get())
+                unlimited = true;
+            else if (item == com.jaquadro.minecraft.storagedrawers.core.ModItems.ONE_STACK_UPGRADE.get())
+                oneStack = true;
         }
 
-        return ItemStack.EMPTY;
+        if (unlimited)
+            return Long.MAX_VALUE / 4;
+        if (multiplier == 0)
+            multiplier = ModCommonConfig.INSTANCE.UPGRADES.getLevelMult(0);
+
+        long buckets = oneStack ? 1 : (long) BASE_CAPACITY_BUCKETS * multiplier;
+        return buckets * DROPLETS_PER_BUCKET;
+    }
+
+    public Component getDisplayName () {
+        return Component.translatable(getBlockState().getBlock().getDescriptionId());
+    }
+
+    public static class ContentProvider implements ContentMenuProvider<PositionContent>
+    {
+        private final BlockEntityTank entity;
+
+        public ContentProvider (BlockEntityTank entity) {
+            this.entity = entity;
+        }
+
+        @Override
+        public PositionContent createContent (ServerPlayer player) {
+            return new PositionContent(entity.getBlockPos());
+        }
+
+        @Override
+        public Component getDisplayName () {
+            return entity.getDisplayName();
+        }
+
+        @Override
+        public AbstractContainerMenu createMenu (int id, Inventory inventory, Player player) {
+            return new ContainerTank(id, inventory, entity);
+        }
     }
 
     public static void serverTick (Level level, BlockPos pos, BlockState state, BlockEntityTank tank) {

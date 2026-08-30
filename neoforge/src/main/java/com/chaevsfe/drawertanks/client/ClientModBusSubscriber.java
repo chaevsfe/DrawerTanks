@@ -3,6 +3,8 @@ package com.chaevsfe.drawertanks.client;
 import com.chaevsfe.drawertanks.ModConstants;
 import com.chaevsfe.drawertanks.client.renderer.BlockEntityTankRenderer;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
+import com.chaevsfe.drawertanks.core.ModContainers;
+import com.chaevsfe.drawertanks.inventory.TankScreen;
 import com.chaevsfe.drawertanks.platform.Bridges;
 import com.chaevsfe.drawertanks.platform.ClientFluidBridge;
 import net.minecraft.client.Minecraft;
@@ -14,6 +16,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.transfer.fluid.FluidResource;
 
 @EventBusSubscriber(modid = ModConstants.MOD_ID, value = Dist.CLIENT)
@@ -23,6 +26,11 @@ public class ClientModBusSubscriber
     public static void registerEntityRenderers (EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(ModBlockEntities.TANK.get(), BlockEntityTankRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.LINKED_TANK.get(), BlockEntityTankRenderer::new);
+    }
+
+    @SubscribeEvent
+    public static void registerMenuScreens (RegisterMenuScreensEvent event) {
+        event.register(ModContainers.TANK_CONTAINER.get(), TankScreen::new);
     }
 
     @SubscribeEvent

@@ -89,6 +89,21 @@ def make_coupler():
     return img
 
 
+def make_gui(sd_res):
+    img = Image.open(os.path.join(sd_res, "assets/storagedrawers/textures/gui/drawers_1.png")).convert("RGBA")
+    px = img.load()
+    panel = px[60, 20]
+    for y in range(16, 74):
+        for x in range(60, 130):
+            px[x, y] = panel
+    # gauge frame: 1px border around a dark 16x56 interior at (80,18)
+    for y in range(17, 75):
+        for x in range(79, 97):
+            inner = 80 <= x <= 95 and 18 <= y <= 73
+            px[x, y] = (18, 18, 18, 255) if inner else (55, 55, 55, 255)
+    return img
+
+
 def linked_block_model():
     model = block_model("dark_oak")
     model["textures"] = {
@@ -239,6 +254,9 @@ def main():
         write_json(os.path.join(d, f"loot_table/blocks/{wood}_tank.json"), loot_table(wood))
         pretty = " ".join(w.capitalize() for w in wood.split("_"))
         lang[f"block.drawertanks.{wood}_tank"] = f"{pretty} Tank"
+
+    os.makedirs(os.path.join(a, "textures/gui"), exist_ok=True)
+    make_gui(sd_res).save(os.path.join(a, "textures/gui/tank.png"))
 
     dark_side = Image.open(os.path.join(sd_tex, "drawers_dark_oak_side.png"))
     make_linked_side(dark_side).save(os.path.join(a, "textures/block/linked_tank_side.png"))
