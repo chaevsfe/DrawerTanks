@@ -46,6 +46,27 @@ public class TankScreen extends AbstractContainerScreen<ContainerTank>
         }
 
         extractFluid(graphics, guiX, guiY);
+        extractTicks(graphics, guiX, guiY);
+    }
+
+    private void extractTicks (GuiGraphicsExtractor graphics, int guiX, int guiY) {
+        BlockEntityTank tank = menu.getTank();
+        if (tank == null)
+            return;
+
+        long capacity = tank.capacityDroplets();
+        if (capacity <= 0 || BlockEntityTank.isUnlimitedCapacity(capacity))
+            return;
+
+        long capacityBuckets = capacity / BlockEntityTank.DROPLETS_PER_BUCKET;
+        int divisions = capacityBuckets >= 2 && capacityBuckets <= 32 ? (int) capacityBuckets : 4;
+        int major = capacityBuckets >= 2 && capacityBuckets <= 32 ? 4 : 2;
+
+        for (int i = 1; i < divisions; i++) {
+            int y = guiY + GAUGE_Y + GAUGE_H - Math.round(i * (float) GAUGE_H / divisions);
+            int width = i % major == 0 ? 6 : 3;
+            graphics.fill(guiX + GAUGE_X, y, guiX + GAUGE_X + width, y + 1, 0xFFA03028);
+        }
     }
 
     private void extractFluid (GuiGraphicsExtractor graphics, int guiX, int guiY) {

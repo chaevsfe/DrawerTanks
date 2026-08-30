@@ -36,11 +36,13 @@ def make_front(side_img):
 
 
 def make_interior(side_img):
-    img = side_img.copy().convert("RGBA")
+    # neutral gray vat interior so dark fluids like oil stay visible
+    img = Image.new("RGBA", (16, 16))
     px = img.load()
     for y in range(16):
         for x in range(16):
-            px[x, y] = darken(px[x, y], 0.30)
+            v = 112 + ((x * 31 + y * 17) % 5) * 5
+            px[x, y] = (v, v, v + 3, 255)
     return img
 
 
@@ -49,26 +51,40 @@ def tint(px, f, add):
             min(255, int(px[2] * f) + add[2]), px[3])
 
 
-def make_linked_side(side_img):
-    # ender chest palette: near-black body with a subtle cyan-green cast and teal edge accents
-    img = side_img.copy().convert("RGBA")
+FRAME_OUTER = (47, 79, 71, 255)
+FRAME_INNER = (28, 52, 47, 255)
+FRAME_KNOB = (87, 130, 122, 255)
+
+
+def ender_body(x, y):
+    # wavy vertical streaks over a near-black green-gray, like the ender chest body
+    n = (x * 13 + y * 29 + x * x * (y + 3)) % 11
+    if n < 2:
+        return (25, 42, 40, 255)
+    if n < 4:
+        return (17, 28, 28, 255)
+    return (12, 19, 20, 255)
+
+
+def make_linked_side(_side_img):
+    img = Image.new("RGBA", (16, 16))
     px = img.load()
     for y in range(16):
         for x in range(16):
-            p = px[x, y]
-            lum = (p[0] + p[1] + p[2]) / 3
-            px[x, y] = (int(10 + lum * 0.10), int(16 + lum * 0.17), int(17 + lum * 0.17), p[3])
-    for x in range(16):
-        for y in (0, 15):
-            px[x, y] = darker_teal_edge(px[x, y])
-            px[y, x] = darker_teal_edge(px[y, x])
+            px[x, y] = ender_body(x, y)
+    for i in range(16):
+        px[i, 0] = FRAME_OUTER
+        px[i, 15] = FRAME_OUTER
+        px[0, i] = FRAME_OUTER
+        px[15, i] = FRAME_OUTER
+    for i in range(1, 15):
+        px[i, 1] = FRAME_INNER
+        px[i, 14] = FRAME_INNER
+        px[1, i] = FRAME_INNER
+        px[14, i] = FRAME_INNER
     for x, y in [(0, 0), (15, 0), (0, 15), (15, 15)]:
-        px[x, y] = (7, 40, 38, 255)
+        px[x, y] = FRAME_KNOB
     return img
-
-
-def darker_teal_edge(p):
-    return (max(6, p[0] - 2), min(255, p[1] + 14), min(255, p[2] + 12), 255)
 
 
 def make_linked_front(side_img):
@@ -81,12 +97,14 @@ def make_linked_front(side_img):
             if inner and not corner:
                 px[x, y] = (0, 0, 0, 0)
             elif corner:
-                px[x, y] = (8, 62, 56, 255)
+                px[x, y] = FRAME_INNER
             else:
-                px[x, y] = (13, 116, 100, 255)
-    # eye-of-ender glints above the window, like the chest latch
-    px[7, 1] = (120, 232, 170, 255)
-    px[8, 1] = (46, 130, 96, 255)
+                px[x, y] = FRAME_OUTER
+    # eye-of-ender latch above the window
+    px[7, 0] = (47, 138, 94, 255)
+    px[8, 0] = (47, 138, 94, 255)
+    px[7, 1] = (126, 230, 170, 255)
+    px[8, 1] = (30, 66, 48, 255)
     return img
 
 
@@ -129,11 +147,11 @@ def make_gui(sd_res):
     for y in range(16, 74):
         for x in range(8, 168):
             px[x, y] = panel
-    # gauge frame: 1px border around a dark 16x56 interior at (80,18)
+    # gauge frame: 1px border around a light gray 16x56 interior at (80,18), BC-style
     for y in range(17, 75):
         for x in range(79, 97):
             inner = 80 <= x <= 95 and 18 <= y <= 73
-            px[x, y] = (18, 18, 18, 255) if inner else (55, 55, 55, 255)
+            px[x, y] = (148, 148, 150, 255) if inner else (85, 85, 85, 255)
     return img
 
 
