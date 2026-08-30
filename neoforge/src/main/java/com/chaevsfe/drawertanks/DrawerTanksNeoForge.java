@@ -43,7 +43,8 @@ public class DrawerTanksNeoForge
     public DrawerTanksNeoForge (ModContainer modContainer, IEventBus modEventBus) {
         Bridges.FRAMED_TANK_FACTORY = com.chaevsfe.drawertanks.block.tile.NeoforgeBlockEntityFramedTank::new;
 
-        modContainer.registerConfig(ModConfig.Type.COMMON, NeoforgeTankConfig.SPEC, "drawertanks-common.toml");
+        // SERVER so the values are synced to clients; capacity is read for rendering and tooltips
+        modContainer.registerConfig(ModConfig.Type.SERVER, NeoforgeTankConfig.SPEC, "drawertanks-server.toml");
         modEventBus.addListener((ModConfigEvent event) -> {
             if (event.getConfig().getSpec() == NeoforgeTankConfig.SPEC)
                 NeoforgeTankConfig.apply();

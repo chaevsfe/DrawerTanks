@@ -88,7 +88,11 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
             return;
 
         renderState.ghost = data.getAmount() <= 0;
-        renderState.fill = renderState.ghost ? 0.12f : blockEntity.fillFraction();
+        // an unlimited capacity makes fillFraction round to zero and the quad collapse, so show it full
+        long capacity = blockEntity.capacityDroplets();
+        renderState.fill = renderState.ghost ? 0.12f
+            : BlockEntityTank.isUnlimitedCapacity(capacity) ? 1f
+            : Math.max(blockEntity.fillFraction(), 1f / 160f);
         if (blockEntity.isShowingQuantity() && data.getAmount() > 0)
             renderState.amountText = amountLabel(data.getAmount());
 

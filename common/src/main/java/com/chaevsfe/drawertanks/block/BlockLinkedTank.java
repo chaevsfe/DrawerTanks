@@ -57,6 +57,10 @@ public class BlockLinkedTank extends BlockTank
         }
 
         if (stack.is(Items.SPONGE) || stack.is(Items.WET_SPONGE)) {
+            // clearing a channel is a deliberate lid gesture, like dyeing it
+            if (hit.getDirection() != Direction.UP)
+                return InteractionResult.PASS;
+
             if (level.isClientSide())
                 return InteractionResult.SUCCESS;
 

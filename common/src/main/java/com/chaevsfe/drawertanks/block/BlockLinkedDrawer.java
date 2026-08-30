@@ -89,6 +89,10 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
         }
 
         if (stack.is(Items.SPONGE) || stack.is(Items.WET_SPONGE)) {
+            // clearing a channel is a deliberate lid gesture, like dyeing it
+            if (hit.getDirection() != Direction.UP)
+                return InteractionResult.PASS;
+
             if (level.isClientSide())
                 return InteractionResult.SUCCESS;
 
@@ -116,7 +120,7 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
         if (!pool.isEmpty() && !ItemStack.isSameItemSameComponents(pool.prototype, stack))
             return InteractionResult.FAIL;
 
-        long space = drawer.capacityItems() - pool.count;
+        long space = drawer.capacityItems(stack) - pool.count;
         int moved = (int) Math.min(space, stack.getCount());
         if (moved <= 0)
             return InteractionResult.FAIL;
@@ -141,6 +145,9 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
                 || serverPlayer.blockActionRestricted(level, pos, serverPlayer.gameMode.getGameModeForPlayer()))
                 return;
         }
+
+        if (!drawer.tryTake(level.getGameTime()))
+            return;
 
         LinkedItemChannels.Pool pool = drawer.pool();
         if (pool == null || pool.isEmpty())

@@ -46,7 +46,11 @@ public class ItemTank extends BlockItem
         }
     }
 
-    private static long capacityFor (ItemStack stack) {
+    private long capacityFor (ItemStack stack) {
+        if (getBlock() instanceof com.chaevsfe.drawertanks.block.BlockLinkedTank)
+            return (long) com.chaevsfe.drawertanks.config.TankConfig.linkedChannelCapacityBuckets
+                * BlockEntityTank.DROPLETS_PER_BUCKET;
+
         List<ItemStack> upgrades = new ArrayList<>();
         TankUpgrades component = stack.get(ModDataComponents.TANK_UPGRADES.get());
         if (component != null) {

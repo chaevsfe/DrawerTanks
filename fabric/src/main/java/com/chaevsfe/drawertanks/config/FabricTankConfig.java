@@ -28,7 +28,8 @@ public final class FabricTankConfig
     public static void init () {
         ModConfigEvents.loading("drawertanks").register(config -> apply());
         ModConfigEvents.reloading("drawertanks").register(config -> apply());
-        ConfigRegistry.INSTANCE.register("drawertanks", ModConfig.Type.COMMON, SPEC, "drawertanks-common.toml");
+        // SERVER so the values are synced to clients; capacity is read for rendering and tooltips
+        ConfigRegistry.INSTANCE.register("drawertanks", ModConfig.Type.SERVER, SPEC, "drawertanks-server.toml");
         if (SPEC.isLoaded())
             apply();
     }

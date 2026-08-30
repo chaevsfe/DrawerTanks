@@ -27,6 +27,7 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity
     private long lastSeenVersion = Long.MIN_VALUE;
     private boolean syncPending;
     private long lastSyncTime = -100;
+    private long lastTakeTime = Long.MIN_VALUE / 2;
 
     private ItemStack mirrorItem = ItemStack.EMPTY;
     private long mirrorCount;
@@ -105,7 +106,23 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity
     }
 
     public long capacityItems () {
-        return LinkedItemChannels.Pool.capacityFor(displayItem());
+        return capacityItems(ItemStack.EMPTY);
+    }
+
+    // an empty channel has no prototype to size from, so fall back to what is being offered
+    public long capacityItems (ItemStack forItem) {
+        ItemStack reference = displayItem();
+        if (reference.isEmpty())
+            reference = forItem;
+        return LinkedItemChannels.Pool.capacityFor(reference);
+    }
+
+    public boolean tryTake (long gameTime) {
+        if (gameTime - lastTakeTime < 5)
+            return false;
+
+        lastTakeTime = gameTime;
+        return true;
     }
 
     public float fillFraction () {
@@ -120,7 +137,11 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity
 
         LinkedItemChannels store = LinkedItemChannels.get(serverLevel.getServer());
         store.setDirty();
-        store.pool(channelKey()).version++;
+        LinkedItemChannels.Pool pool = store.pool(channelKey());
+        pool.version++;
+        lastSeenVersion = pool.version;
+        mirrorItem = pool.prototype.copy();
+        mirrorCount = pool.count;
         requestSync();
     }
 

@@ -120,7 +120,12 @@ public class BlockEntityLinkedTank extends BlockEntityTank
         if (getLevel() instanceof ServerLevel serverLevel) {
             LinkedChannels store = LinkedChannels.get(serverLevel.getServer());
             store.setDirty();
-            store.pool(channelKey()).version++;
+            LinkedChannels.Pool pool = store.pool(channelKey());
+            pool.version++;
+            lastSeenVersion = pool.version;
+            TankData mirror = clientMirror();
+            mirror.setFluid(pool.data.getFluid(), pool.data.getComponents());
+            mirror.setAmount(pool.data.getAmount());
         }
         super.onContentsChanged();
     }
@@ -175,6 +180,16 @@ public class BlockEntityLinkedTank extends BlockEntityTank
     @Override
     protected void applyImplicitComponents (net.minecraft.core.component.DataComponentGetter input) {
         LinkedChannelData.apply(input, channels);
+
+        // read both so they are consumed rather than stranded as ghost components on the item;
+        // any contents ride the existing fold into the channel pool
+        input.get(com.chaevsfe.drawertanks.core.ModDataComponents.TANK_UPGRADES.get());
+        com.chaevsfe.drawertanks.components.TankContents contents =
+            input.get(com.chaevsfe.drawertanks.core.ModDataComponents.TANK_CONTENTS.get());
+        if (contents != null && !contents.isEmpty()) {
+            clientMirror().fromContents(contents);
+            legacyContentsPending = true;
+        }
     }
 
     private class LinkData extends BlockEntityDataShim
