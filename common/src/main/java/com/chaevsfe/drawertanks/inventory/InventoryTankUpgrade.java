@@ -16,8 +16,18 @@ public class InventoryTankUpgrade implements Container
     @Nullable
     private final BlockEntityTank tank;
 
+    // Client side the menu owns its slots, the way a vanilla container does. Reading through to the
+    // block entity would let its update packet rewrite the array the open screen is drawing from,
+    // which is what made the upgrade slots flicker.
+    private final ItemStack[] clientItems = new ItemStack[upgradeCapacity];
+
     public InventoryTankUpgrade (@Nullable BlockEntityTank tank) {
         this.tank = tank;
+        java.util.Arrays.fill(clientItems, ItemStack.EMPTY);
+    }
+
+    private boolean clientOwned () {
+        return tank != null && tank.getLevel() != null && tank.getLevel().isClientSide();
     }
 
     @Nullable
@@ -36,7 +46,7 @@ public class InventoryTankUpgrade implements Container
             return true;
 
         for (int i = 0; i < upgradeCapacity; i++) {
-            if (!tank.upgrades().getUpgrade(i).isEmpty())
+            if (!getItem(i).isEmpty())
                 return false;
         }
         return true;
@@ -45,6 +55,10 @@ public class InventoryTankUpgrade implements Container
     @Override
     @NotNull
     public ItemStack getItem (int slot) {
+        if (slot < 0 || slot >= upgradeCapacity)
+            return ItemStack.EMPTY;
+        if (clientOwned())
+            return clientItems[slot];
         return tank == null ? ItemStack.EMPTY : tank.upgrades().getUpgrade(slot);
     }
 
@@ -52,10 +66,8 @@ public class InventoryTankUpgrade implements Container
     @NotNull
     public ItemStack removeItem (int slot, int count) {
         ItemStack stack = getItem(slot).copy();
-        if (count > 0 && tank != null) {
-            tank.upgrades().setUpgrade(slot, ItemStack.EMPTY);
-            tank.refreshUpgradeMirror();
-        }
+        if (count > 0)
+            setItem(slot, ItemStack.EMPTY);
         return stack;
     }
 
@@ -67,6 +79,14 @@ public class InventoryTankUpgrade implements Container
 
     @Override
     public void setItem (int slot, @NotNull ItemStack item) {
+        if (slot < 0 || slot >= upgradeCapacity)
+            return;
+
+        if (clientOwned()) {
+            clientItems[slot] = item;
+            return;
+        }
+
         if (tank != null) {
             tank.upgrades().setUpgrade(slot, item);
             tank.refreshUpgradeMirror();
