@@ -1,0 +1,32 @@
+{
+    "schemaVersion": 1,
+    "id": "${mod_id}",
+    "name": "${mod_name}",
+    "version": "${mod_version}",
+    "environment": "*",
+    "authors": ["${mod_authors}"],
+    "license": "${mod_license}",
+    "contact": {
+        "homepage": "${mod_homepage_url}",
+        "sources": "${mod_sources_url}",
+        "issues": "${mod_issues_url}"
+    },
+    "description": "${mod_description}",
+    "entrypoints": {
+        "main": [
+            "com.chaevsfe.drawertanks.DrawerTanksFabric"
+        ],
+        "client": [
+            "com.chaevsfe.drawertanks.DrawerTanksFabricClient"
+        ]
+    },
+    "depends": {
+        "fabricloader": ">=${fabric_loader_min}",
+        "fabric-api": "*",
+        "storagedrawers": ">=${storagedrawers_version}",
+        "java": ">=${java_version}",
+        "minecraft": ">=${minecraft_version_lower} <${minecraft_version_upper}"
+    },
+    "custom": {},
+    "mixins": []
+}
