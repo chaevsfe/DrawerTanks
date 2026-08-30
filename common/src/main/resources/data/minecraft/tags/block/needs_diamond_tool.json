@@ -1,0 +1,7 @@
+{
+    "replace": false,
+    "values": [
+        "drawertanks:linked_tank",
+        "drawertanks:linked_drawer"
+    ]
+}

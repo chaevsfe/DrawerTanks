@@ -43,6 +43,7 @@ public final class ModBlocks
             .mapColor(MapColor.COLOR_BLACK)
             .strength(10f, 600f)
             .sound(SoundType.WOOD)
+            .requiresCorrectToolForDrops()
             .setId(ResourceKey.create(Registries.BLOCK, ModConstants.loc("linked_tank")))));
 
     public static final RegistryEntry<BlockLinkedDrawer> LINKED_DRAWER = BLOCKS.register("linked_drawer",
@@ -50,6 +51,7 @@ public final class ModBlocks
             .mapColor(MapColor.COLOR_BLACK)
             .strength(10f, 600f)
             .sound(SoundType.WOOD)
+            .requiresCorrectToolForDrops()
             .setId(ResourceKey.create(Registries.BLOCK, ModConstants.loc("linked_drawer")))));
 
     public static final List<String> EXCLUDE_ITEMS = new ArrayList<>();
