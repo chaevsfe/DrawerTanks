@@ -9,6 +9,9 @@ import com.chaevsfe.drawertanks.core.ModItems;
 import com.chaevsfe.drawertanks.inventory.TankResourceHandler;
 import com.chaevsfe.drawertanks.platform.Bridges;
 import com.chaevsfe.drawertanks.platform.FluidBridge;
+import com.jaquadro.minecraft.storagedrawers.api.storage.IDrawerAttributes;
+import com.texelsaurus.minecraft.chameleon.capabilities.ChameleonCapability;
+import com.texelsaurus.minecraft.chameleon.capabilities.NeoforgeCapability;
 import com.texelsaurus.minecraft.chameleon.registry.NeoforgeRegistryContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -74,6 +77,16 @@ public class DrawerTanksNeoForge
     private void registerCapabilities (RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(Capabilities.Fluid.BLOCK, ModBlockEntities.TANK.get(), (be, side) -> TankResourceHandler.of(be));
         event.registerBlockEntity(Capabilities.Fluid.BLOCK, ModBlockEntities.LINKED_TANK.get(), (be, side) -> TankResourceHandler.of(be));
+
+        DrawerTanksNeoForge.<IDrawerAttributes, Object>cast(com.jaquadro.minecraft.storagedrawers.capabilities.Capabilities.DRAWER_ATTRIBUTES)
+            .register(event, ModBlockEntities.TANK.get(), (e, c) -> e.getDrawerAttributes());
+        DrawerTanksNeoForge.<IDrawerAttributes, Object>cast(com.jaquadro.minecraft.storagedrawers.capabilities.Capabilities.DRAWER_ATTRIBUTES)
+            .register(event, ModBlockEntities.LINKED_TANK.get(), (e, c) -> e.getDrawerAttributes());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T, C> NeoforgeCapability<T, C> cast (ChameleonCapability<T> cap) {
+        return (NeoforgeCapability<T, C>) cap;
     }
 
     private void buildCreativeTabs (BuildCreativeModeTabContentsEvent event) {

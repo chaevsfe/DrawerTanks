@@ -50,14 +50,25 @@ def tint(px, f, add):
 
 
 def make_linked_side(side_img):
+    # ender chest palette: near-black body with a subtle cyan-green cast and teal edge accents
     img = side_img.copy().convert("RGBA")
     px = img.load()
     for y in range(16):
         for x in range(16):
-            px[x, y] = tint(px[x, y], 0.40, (10, 0, 26))
+            p = px[x, y]
+            lum = (p[0] + p[1] + p[2]) / 3
+            px[x, y] = (int(10 + lum * 0.10), int(16 + lum * 0.17), int(17 + lum * 0.17), p[3])
+    for x in range(16):
+        for y in (0, 15):
+            px[x, y] = darker_teal_edge(px[x, y])
+            px[y, x] = darker_teal_edge(px[y, x])
     for x, y in [(0, 0), (15, 0), (0, 15), (15, 15)]:
-        px[x, y] = (70, 32, 104, 255)
+        px[x, y] = (7, 40, 38, 255)
     return img
+
+
+def darker_teal_edge(p):
+    return (max(6, p[0] - 2), min(255, p[1] + 14), min(255, p[2] + 12), 255)
 
 
 def make_linked_front(side_img):
@@ -70,9 +81,12 @@ def make_linked_front(side_img):
             if inner and not corner:
                 px[x, y] = (0, 0, 0, 0)
             elif corner:
-                px[x, y] = (58, 26, 88, 255)
+                px[x, y] = (8, 62, 56, 255)
             else:
-                px[x, y] = (96, 48, 148, 255)
+                px[x, y] = (13, 116, 100, 255)
+    # eye-of-ender glints above the window, like the chest latch
+    px[7, 1] = (120, 232, 170, 255)
+    px[8, 1] = (46, 130, 96, 255)
     return img
 
 

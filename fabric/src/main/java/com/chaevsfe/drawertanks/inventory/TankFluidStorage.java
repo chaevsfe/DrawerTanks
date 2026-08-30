@@ -34,7 +34,7 @@ public class TankFluidStorage extends SnapshotParticipant<TankFluidStorage.State
             return 0;
 
         TankData data = tank.tankData();
-        if (!data.isEmpty() && !data.matches(resource.getFluid(), resource.getComponentsPatch()))
+        if (data.hasFluid() && !data.matches(resource.getFluid(), resource.getComponentsPatch()))
             return 0;
 
         long space = Math.max(0, tank.capacityDroplets() - data.getAmount());
@@ -46,7 +46,7 @@ public class TankFluidStorage extends SnapshotParticipant<TankFluidStorage.State
             data.setAmount(data.getAmount() + accepted);
         }
 
-        if (tank.isVoid() && !data.isEmpty() && data.matches(resource.getFluid(), resource.getComponentsPatch()))
+        if (tank.isVoid() && data.hasFluid() && data.matches(resource.getFluid(), resource.getComponentsPatch()))
             return maxAmount;
 
         return accepted;
@@ -58,7 +58,7 @@ public class TankFluidStorage extends SnapshotParticipant<TankFluidStorage.State
             return 0;
 
         TankData data = tank.tankData();
-        if (data.isEmpty() || !data.matches(resource.getFluid(), resource.getComponentsPatch()))
+        if (!data.hasFluid() || !data.matches(resource.getFluid(), resource.getComponentsPatch()))
             return 0;
 
         if (tank.isUnlimitedVending())
@@ -75,13 +75,13 @@ public class TankFluidStorage extends SnapshotParticipant<TankFluidStorage.State
 
     @Override
     public boolean isResourceBlank () {
-        return tank.tankData().isEmpty();
+        return !tank.tankData().hasFluid();
     }
 
     @Override
     public FluidVariant getResource () {
         TankData data = tank.tankData();
-        return data.isEmpty() ? FluidVariant.blank() : FluidVariant.of(data.getFluid(), data.getComponents());
+        return data.hasFluid() ? FluidVariant.of(data.getFluid(), data.getComponents()) : FluidVariant.blank();
     }
 
     @Override

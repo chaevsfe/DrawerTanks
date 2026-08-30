@@ -15,6 +15,7 @@ public class TankData extends BlockEntityDataShim
     private Fluid fluid = Fluids.EMPTY;
     private DataComponentPatch components = DataComponentPatch.EMPTY;
     private long amount;
+    private boolean retainFluid;
 
     public Fluid getFluid () {
         return fluid;
@@ -32,6 +33,10 @@ public class TankData extends BlockEntityDataShim
         return fluid == Fluids.EMPTY || amount <= 0;
     }
 
+    public boolean hasFluid () {
+        return fluid != Fluids.EMPTY;
+    }
+
     public boolean matches (Fluid otherFluid, DataComponentPatch otherComponents) {
         return fluid == otherFluid && components.equals(otherComponents);
     }
@@ -42,8 +47,14 @@ public class TankData extends BlockEntityDataShim
     }
 
     public void setAmount (long amount) {
-        this.amount = amount;
-        if (this.amount <= 0)
+        this.amount = Math.max(0, amount);
+        if (this.amount <= 0 && !retainFluid)
+            clear();
+    }
+
+    public void setRetainFluid (boolean retainFluid) {
+        this.retainFluid = retainFluid;
+        if (!retainFluid && amount <= 0)
             clear();
     }
 
@@ -72,14 +83,16 @@ public class TankData extends BlockEntityDataShim
     public void read (ValueInput input) {
         fluid = input.read("Fluid", BuiltInRegistries.FLUID.byNameCodec()).orElse(Fluids.EMPTY);
         components = input.read("FluidComponents", DataComponentPatch.CODEC).orElse(DataComponentPatch.EMPTY);
-        amount = input.read("Amount", Codec.LONG).orElse(0L);
-        if (isEmpty())
-            clear();
+        amount = Math.max(0, input.read("Amount", Codec.LONG).orElse(0L));
+        if (fluid == Fluids.EMPTY) {
+            components = DataComponentPatch.EMPTY;
+            amount = 0;
+        }
     }
 
     @Override
     public void write (ValueOutput output) {
-        if (isEmpty()) {
+        if (fluid == Fluids.EMPTY) {
             output.discard("Fluid");
             output.discard("FluidComponents");
             output.discard("Amount");

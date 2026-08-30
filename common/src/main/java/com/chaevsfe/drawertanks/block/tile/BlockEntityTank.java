@@ -7,7 +7,11 @@ import com.chaevsfe.drawertanks.core.ModBlockEntities;
 import com.chaevsfe.drawertanks.core.ModDataComponents;
 import com.chaevsfe.drawertanks.config.TankConfig;
 import com.chaevsfe.drawertanks.inventory.ContainerTank;
+import com.jaquadro.minecraft.storagedrawers.api.storage.IDrawerAttributesModifiable;
+import com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute;
 import com.jaquadro.minecraft.storagedrawers.block.tile.BaseBlockEntity;
+import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.BlockEntityDataShim;
+import com.mojang.serialization.Codec;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.UpgradeData;
 import com.jaquadro.minecraft.storagedrawers.capabilities.BasicDrawerAttributes;
 import com.jaquadro.minecraft.storagedrawers.config.ModCommonConfig;
@@ -27,6 +31,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
 import java.util.ArrayList;
@@ -56,6 +61,7 @@ public class BlockEntityTank extends BaseBlockEntity
         upgradeData.setDrawerAttributes(attributes);
         injectData(upgradeData);
         injectData(tankData);
+        injectData(new AttributesData());
     }
 
     public TankData tankData () {
@@ -64,6 +70,22 @@ public class BlockEntityTank extends BaseBlockEntity
 
     public UpgradeData upgrades () {
         return upgradeData;
+    }
+
+    public IDrawerAttributesModifiable getDrawerAttributes () {
+        return attributes;
+    }
+
+    public boolean isFluidLocked () {
+        return attributes.isItemLocked(LockAttribute.LOCK_EMPTY);
+    }
+
+    public boolean isConcealed () {
+        return attributes.isConcealed();
+    }
+
+    public boolean isShowingQuantity () {
+        return attributes.isShowingQuantity();
     }
 
     public boolean isVoid () {
@@ -282,8 +304,38 @@ public class BlockEntityTank extends BaseBlockEntity
     {
         @Override
         protected void onAttributeChanged () {
+            tankData.setRetainFluid(isItemLocked(LockAttribute.LOCK_EMPTY));
             if (getLevel() != null && !getLevel().isClientSide())
                 onContentsChanged();
+        }
+    }
+
+    private class AttributesData extends BlockEntityDataShim
+    {
+        @Override
+        public void read (ValueInput input) {
+            boolean locked = input.read("Locked", Codec.BOOL).orElse(false);
+            attributes.setItemLocked(LockAttribute.LOCK_EMPTY, locked);
+            attributes.setItemLocked(LockAttribute.LOCK_POPULATED, locked);
+            attributes.setIsConcealed(input.read("Concealed", Codec.BOOL).orElse(false));
+            attributes.setIsShowingQuantity(input.read("ShowQuantity", Codec.BOOL).orElse(false));
+            tankData.setRetainFluid(locked);
+        }
+
+        @Override
+        public void write (ValueOutput output) {
+            if (attributes.isItemLocked(LockAttribute.LOCK_EMPTY))
+                output.store("Locked", Codec.BOOL, true);
+            else
+                output.discard("Locked");
+            if (attributes.isConcealed())
+                output.store("Concealed", Codec.BOOL, true);
+            else
+                output.discard("Concealed");
+            if (attributes.isShowingQuantity())
+                output.store("ShowQuantity", Codec.BOOL, true);
+            else
+                output.discard("ShowQuantity");
         }
     }
 }

@@ -8,9 +8,11 @@ public class TankRenderState extends BlockEntityRenderState
 {
     public BlockState blockState;
     public boolean hasFluid;
+    public boolean ghost;
     public float fill;
     public TextureAtlasSprite sprite;
     public int color = 0xFFFFFFFF;
+    public String amountText;
 
     public TankRenderState () { }
 }

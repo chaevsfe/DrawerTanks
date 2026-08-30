@@ -11,7 +11,10 @@ import com.chaevsfe.drawertanks.core.ModItems;
 import com.chaevsfe.drawertanks.inventory.TankFluidStorage;
 import com.chaevsfe.drawertanks.platform.Bridges;
 import com.chaevsfe.drawertanks.platform.FluidBridge;
+import com.jaquadro.minecraft.storagedrawers.api.storage.IDrawerAttributes;
+import com.jaquadro.minecraft.storagedrawers.capabilities.Capabilities;
 import com.texelsaurus.minecraft.chameleon.api.ChameleonInit;
+import com.texelsaurus.minecraft.chameleon.capabilities.IFabricCapability;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext;
 import net.fabricmc.loader.api.FabricLoader;
@@ -43,6 +46,10 @@ public class DrawerTanksFabric implements ModInitializer
 
         FluidStorage.SIDED.registerForBlockEntity((be, dir) -> TankFluidStorage.of(be), ModBlockEntities.TANK.get());
         FluidStorage.SIDED.registerForBlockEntity((be, dir) -> TankFluidStorage.of(be), ModBlockEntities.LINKED_TANK.get());
+
+        IFabricCapability<IDrawerAttributes> attributesCapability = (IFabricCapability<IDrawerAttributes>) Capabilities.DRAWER_ATTRIBUTES;
+        attributesCapability.register(ModBlockEntities.TANK.get(), be -> be.getDrawerAttributes());
+        attributesCapability.register(ModBlockEntities.LINKED_TANK.get(), be -> be.getDrawerAttributes());
 
         Bridges.FLUID = new FluidBridge()
         {

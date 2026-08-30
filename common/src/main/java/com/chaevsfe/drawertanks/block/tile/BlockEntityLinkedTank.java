@@ -66,7 +66,7 @@ public class BlockEntityLinkedTank extends BlockEntityTank
         TankData to = tankData();
         if (from.isEmpty())
             return;
-        if (!to.isEmpty() && !to.matches(from.getFluid(), from.getComponents()))
+        if (to.hasFluid() && !to.matches(from.getFluid(), from.getComponents()))
             return;
 
         long space = Math.max(0, capacityDroplets() - to.getAmount());

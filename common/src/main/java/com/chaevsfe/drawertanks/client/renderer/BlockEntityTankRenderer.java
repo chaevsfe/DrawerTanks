@@ -9,6 +9,7 @@ import com.jaquadro.minecraft.storagedrawers.config.ModCommonConfig;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.block.FluidModel;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -17,6 +18,8 @@ import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
@@ -30,7 +33,10 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
     private static final float WIN_MAX = 13;
     private static final float DEPTH = 2;
 
+    private final Font font;
+
     public BlockEntityTankRenderer (BlockEntityRendererProvider.Context context) {
+        font = context.font();
     }
 
     @Override
@@ -57,11 +63,16 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
         renderState.lightCoords = (renderState.lightCoords & 0xFFFF0000) | enforcedBlockLight;
 
         TankData data = blockEntity.tankData();
-        renderState.hasFluid = !data.isEmpty();
+        boolean concealed = blockEntity.isConcealed();
+        renderState.hasFluid = !concealed && data.hasFluid();
+        renderState.amountText = null;
         if (!renderState.hasFluid)
             return;
 
-        renderState.fill = blockEntity.fillFraction();
+        renderState.ghost = data.getAmount() <= 0;
+        renderState.fill = renderState.ghost ? 0.12f : blockEntity.fillFraction();
+        if (blockEntity.isShowingQuantity() && data.getAmount() > 0)
+            renderState.amountText = amountLabel(data.getAmount());
 
         FluidState fluidState = data.getFluid().defaultFluidState();
         FluidModel model = Minecraft.getInstance().getModelManager().getFluidStateModelSet().get(fluidState);
@@ -95,7 +106,25 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
 
         submitNodeCollector.submitCustomGeometry(poseStack, RenderTypes.translucentMovingBlock(), new FluidQuad(renderState));
 
+        if (renderState.amountText != null) {
+            poseStack.pushPose();
+            poseStack.translate(0.5f, 0.32f, 1.005f);
+            poseStack.scale(1 / 128f, -1 / 128f, 1);
+            int width = font.width(renderState.amountText);
+            submitNodeCollector.submitText(poseStack, -width / 2f, 0,
+                FormattedCharSequence.forward(renderState.amountText, Style.EMPTY),
+                false, Font.DisplayMode.POLYGON_OFFSET, renderState.lightCoords, 0xFFFFFFFF, 0, 0);
+            poseStack.popPose();
+        }
+
         poseStack.popPose();
+    }
+
+    private static String amountLabel (long droplets) {
+        double value = droplets / (double) BlockEntityTank.DROPLETS_PER_BUCKET;
+        if (value == Math.floor(value))
+            return (long) value + " B";
+        return String.format(java.util.Locale.ROOT, "%.1f B", value);
     }
 
     private void alignRendering (PoseStack poseStack, Direction side) {
@@ -139,6 +168,8 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
             float a = ((color >>> 24) & 0xFF) / 255f;
             if (a <= 0)
                 a = 1f;
+            if (renderState.ghost)
+                a *= 0.45f;
             float r = ((color >> 16) & 0xFF) / 255f;
             float g = ((color >> 8) & 0xFF) / 255f;
             float b = (color & 0xFF) / 255f;

@@ -55,7 +55,7 @@ public class TankResourceHandler implements ResourceHandler<FluidResource>
     @Override
     public FluidResource getResource (int index) {
         TankData data = tank.tankData();
-        return data.isEmpty() ? FluidResource.EMPTY : FluidResource.of(data.getFluid(), data.getComponents());
+        return data.hasFluid() ? FluidResource.of(data.getFluid(), data.getComponents()) : FluidResource.EMPTY;
     }
 
     @Override
@@ -74,7 +74,7 @@ public class TankResourceHandler implements ResourceHandler<FluidResource>
             return false;
 
         TankData data = tank.tankData();
-        return data.isEmpty() || data.matches(resource.value(), resource.getComponentsPatch());
+        return !data.hasFluid() || data.matches(resource.value(), resource.getComponentsPatch());
     }
 
     @Override
@@ -84,9 +84,10 @@ public class TankResourceHandler implements ResourceHandler<FluidResource>
 
         TankData data = tank.tankData();
 
-        // sub-mB residue (possible on worlds coming from fabric) is replaceable, not a fluid lock
-        boolean residueOnly = !data.isEmpty() && data.getAmount() < BlockEntityTank.DROPLETS_PER_MB;
-        if (!data.isEmpty() && !residueOnly && !data.matches(resource.value(), resource.getComponentsPatch()))
+        // sub-mB residue (possible on worlds coming from fabric) is replaceable unless the fluid is locked
+        boolean residueOnly = data.hasFluid() && data.getAmount() > 0
+            && data.getAmount() < BlockEntityTank.DROPLETS_PER_MB && !tank.isFluidLocked();
+        if (data.hasFluid() && !residueOnly && !data.matches(resource.value(), resource.getComponentsPatch()))
             return 0;
 
         long capacity = tank.capacityDroplets();
@@ -103,7 +104,7 @@ public class TankResourceHandler implements ResourceHandler<FluidResource>
             data.setAmount(Math.min(capacity, data.getAmount() + accepted * BlockEntityTank.DROPLETS_PER_MB));
         }
 
-        if (tank.isVoid() && !data.isEmpty() && data.matches(resource.value(), resource.getComponentsPatch()))
+        if (tank.isVoid() && data.hasFluid() && data.matches(resource.value(), resource.getComponentsPatch()))
             return amount;
 
         return accepted;
@@ -115,7 +116,7 @@ public class TankResourceHandler implements ResourceHandler<FluidResource>
             return 0;
 
         TankData data = tank.tankData();
-        if (data.isEmpty() || !data.matches(resource.value(), resource.getComponentsPatch()))
+        if (!data.hasFluid() || !data.matches(resource.value(), resource.getComponentsPatch()))
             return 0;
 
         if (tank.isUnlimitedVending())
