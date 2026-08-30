@@ -4,7 +4,8 @@
         "particle": "drawertanks:block/linked_tank_side",
         "side": "drawertanks:block/linked_tank_side",
         "top": "drawertanks:block/linked_tank_top",
-        "front": "drawertanks:block/linked_drawer_front"
+        "front": "drawertanks:block/linked_drawer_front",
+        "panel": "drawertanks:block/linked_drawer_panel"
     },
     "elements": [
         {
@@ -186,7 +187,7 @@
                         14,
                         14
                     ],
-                    "texture": "#front"
+                    "texture": "#panel"
                 }
             }
         },

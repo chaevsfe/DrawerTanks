@@ -192,6 +192,29 @@ def make_linked_drawer_front(side_img, sd_res):
     return img
 
 
+def make_linked_drawer_panel(side_img):
+    # flattened version of the side for the recessed inner panel: average tone, faint grain
+    src = make_linked_side(side_img)
+    px = src.load()
+    rs = gs = bs = 0
+    for y in range(16):
+        for x in range(16):
+            p = px[x, y]
+            rs += p[0]
+            gs += p[1]
+            bs += p[2]
+    base = (rs // 256, gs // 256, bs // 256)
+    img = Image.new("RGBA", (16, 16))
+    out = img.load()
+    for y in range(16):
+        for x in range(16):
+            d = (((x * 31 + y * 17) % 4) - 2) * 2
+            out[x, y] = (max(0, min(255, base[0] + d)),
+                         max(0, min(255, base[1] + d)),
+                         max(0, min(255, base[2] + d)), 255)
+    return img
+
+
 def linked_drawer_model():
     side = "drawertanks:block/linked_tank_side"
     depth = 1.5
@@ -201,7 +224,8 @@ def linked_drawer_model():
             "particle": side,
             "side": side,
             "top": "drawertanks:block/linked_tank_top",
-            "front": "drawertanks:block/linked_drawer_front"
+            "front": "drawertanks:block/linked_drawer_front",
+            "panel": "drawertanks:block/linked_drawer_panel"
         },
         "elements": [
             {
@@ -223,7 +247,7 @@ def linked_drawer_model():
             {"from": [14, 2, 0], "to": [16, 14, 0],
              "faces": {"north": {"uv": [0, 2, 2, 14], "texture": "#front", "cullface": "north"}}},
             {"from": [2, 2, depth], "to": [14, 14, depth],
-             "faces": {"north": {"uv": [2, 2, 14, 14], "texture": "#front"}}},
+             "faces": {"north": {"uv": [2, 2, 14, 14], "texture": "#panel"}}},
             {"from": [2, 14, 0], "to": [14, 14, depth],
              "faces": {"down": {"uv": [2, 0, 14, depth], "texture": "#side"}}},
             {"from": [2, 2, 0], "to": [14, 2, depth],
@@ -540,6 +564,7 @@ def main():
                {"variants": {"": {"model": "drawertanks:block/framed/tank_trim"}}})
 
     make_linked_drawer_front(dark_side, sd_res).save(os.path.join(a, "textures/block/linked_drawer_front.png"))
+    make_linked_drawer_panel(dark_side).save(os.path.join(a, "textures/block/linked_drawer_panel.png"))
     write_json(os.path.join(a, "models/block/linked_drawer.json"), linked_drawer_model())
     write_json(os.path.join(a, "blockstates/linked_drawer.json"), facing_blockstate("drawertanks:block/linked_drawer"))
     write_json(os.path.join(a, "items/linked_drawer.json"),
