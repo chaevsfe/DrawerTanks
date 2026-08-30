@@ -66,7 +66,8 @@ public class LinkedItemChannels extends SavedData
     private static final Codec<LinkedItemChannels> CODEC = Codec.unboundedMap(Codec.STRING, PoolContents.CODEC)
         .xmap(LinkedItemChannels::fromMap, LinkedItemChannels::toMap);
 
-    // vanilla dereferences dataFixType on load without a null check, so this must be a real constant
+    // both loaders currently patch vanilla's unguarded DataFixTypes.update call to tolerate null,
+    // but vanilla itself does not; pass a real constant rather than depend on that patch
     public static final SavedDataType<LinkedItemChannels> TYPE = new SavedDataType<>(
         ModConstants.loc("linked_item_channels"), LinkedItemChannels::new, CODEC, DataFixTypes.SAVED_DATA_RANDOM_SEQUENCES);
 
