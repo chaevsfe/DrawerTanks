@@ -4,7 +4,9 @@
     "name": "${mod_name}",
     "version": "${mod_version}",
     "environment": "*",
-    "authors": ["${mod_authors}"],
+    "authors": [
+        "${mod_authors}"
+    ],
     "license": "${mod_license}",
     "contact": {
         "homepage": "${mod_homepage_url}",
@@ -12,6 +14,7 @@
         "issues": "${mod_issues_url}"
     },
     "description": "${mod_description}",
+    "icon": "assets/drawertanks/icon.png",
     "accessWidener": "drawertanks.fabric.accesswidener",
     "entrypoints": {
         "main": [

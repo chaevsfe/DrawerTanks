@@ -10,6 +10,7 @@ license="${mod_license}"
     description='''${mod_description}'''
     authors="${mod_authors}"
     displayURL="${mod_homepage_url}"
+    logoFile="assets/drawertanks/icon.png"
 
 [[dependencies.${mod_id}]]
     modId="minecraft"
