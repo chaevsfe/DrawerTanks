@@ -19,6 +19,7 @@ import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.sprite.SpriteId;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
@@ -37,9 +38,6 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
     private static final float WIN_MAX = 13;
     private static final float DEPTH = 0.5f;
 
-    private static final SpriteId STUD_SPRITE = new SpriteId(TextureAtlas.LOCATION_BLOCKS,
-        Identifier.withDefaultNamespace("block/white_concrete"));
-    private static final int UNSET_STRIP_COLOR = 0xFF232323;
 
     private final Font font;
 
@@ -70,14 +68,16 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
         int enforcedBlockLight = Math.max(renderState.lightCoords & 0xFFFF, enforcedLight * 16);
         renderState.lightCoords = (renderState.lightCoords & 0xFFFF0000) | enforcedBlockLight;
 
-        renderState.channelColors = null;
+        renderState.channelSprites = null;
         if (blockEntity instanceof BlockEntityLinkedTank linked) {
             var channels = linked.getChannels();
-            int[] colors = new int[channels.length];
-            for (int i = 0; i < colors.length; i++)
-                colors[i] = channels[i] == null ? UNSET_STRIP_COLOR : channels[i].getTextureDiffuseColor();
-            renderState.channelColors = colors;
-            renderState.studSprite = Minecraft.getInstance().getAtlasManager().get(STUD_SPRITE);
+            var sprites = new TextureAtlasSprite[channels.length];
+            for (int i = 0; i < sprites.length; i++) {
+                var color = channels[i] == null ? net.minecraft.world.item.DyeColor.WHITE : channels[i];
+                sprites[i] = Minecraft.getInstance().getAtlasManager().get(new SpriteId(TextureAtlas.LOCATION_BLOCKS,
+                    Identifier.withDefaultNamespace("block/" + color.getSerializedName() + "_wool")));
+            }
+            renderState.channelSprites = sprites;
         }
 
         TankData data = blockEntity.tankData();
@@ -112,7 +112,7 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
     @Override
     public void submit (TankRenderState renderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
         boolean drawFluid = renderState.hasFluid && renderState.sprite != null;
-        boolean drawStuds = renderState.channelColors != null && renderState.studSprite != null;
+        boolean drawStuds = renderState.channelSprites != null;
         if (!drawFluid && !drawStuds)
             return;
 
@@ -167,33 +167,60 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
     {
         @Override
         public void render (PoseStack.Pose pose, VertexConsumer vertexConsumer) {
-            var sprite = renderState.studSprite;
-            float u = (sprite.getU0() + sprite.getU1()) / 2;
-            float v = (sprite.getV0() + sprite.getV1()) / 2;
             Matrix4f matrix = pose.pose();
             int light = renderState.lightCoords;
 
-            for (int i = 0; i < renderState.channelColors.length; i++) {
-                int color = renderState.channelColors[i];
-                float r = ((color >> 16) & 0xFF) / 255f;
-                float g = ((color >> 8) & 0xFF) / 255f;
-                float b = (color & 0xFF) / 255f;
+            for (int i = 0; i < renderState.channelSprites.length; i++) {
+                var sprite = renderState.channelSprites[i];
+                if (sprite == null)
+                    continue;
+
                 float x1 = (1 + i * 3) * UNIT;
                 float x2 = x1 + 2 * UNIT;
                 float z1 = 3 * UNIT;
                 float z2 = 13 * UNIT;
-                float y = 1 + 0.0025f;
+                float y1 = 1f;
+                float y2 = 1f + UNIT;
 
-                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x1, y, z1, u, v, r, g, b, 1f);
-                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x1, y, z2, u, v, r, g, b, 1f);
-                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x2, y, z2, u, v, r, g, b, 1f);
-                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x2, y, z1, u, v, r, g, b, 1f);
+                float u0 = sprite.getU0();
+                float du = sprite.getU1() - u0;
+                float v0 = sprite.getV0();
+                float dv = sprite.getV1() - v0;
+                float ua = u0 + du * (1 + i * 3) / 16f;
+                float ub = u0 + du * (3 + i * 3) / 16f;
+                float va = v0 + dv * 3 / 16f;
+                float vb = v0 + dv * 13 / 16f;
+                float vSide = v0 + dv / 16f;
 
-                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x2, y, z1, u, v, r, g, b, 1f);
-                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x2, y, z2, u, v, r, g, b, 1f);
-                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x1, y, z2, u, v, r, g, b, 1f);
-                FluidQuad.addVertex(matrix, pose, vertexConsumer, light, x1, y, z1, u, v, r, g, b, 1f);
+                // top
+                quad(matrix, pose, vertexConsumer, light, sprite,
+                    x1, y2, z1, x1, y2, z2, x2, y2, z2, x2, y2, z1, ua, va, ub, vb);
+                // front and back
+                quad(matrix, pose, vertexConsumer, light, sprite,
+                    x1, y1, z2, x1, y2, z2, x2, y2, z2, x2, y1, z2, ua, va, ub, vSide);
+                quad(matrix, pose, vertexConsumer, light, sprite,
+                    x1, y1, z1, x1, y2, z1, x2, y2, z1, x2, y1, z1, ua, va, ub, vSide);
+                // left and right
+                quad(matrix, pose, vertexConsumer, light, sprite,
+                    x1, y1, z1, x1, y2, z1, x1, y2, z2, x1, y1, z2, va, ua, vb, u0 + du / 16f);
+                quad(matrix, pose, vertexConsumer, light, sprite,
+                    x2, y1, z1, x2, y2, z1, x2, y2, z2, x2, y1, z2, va, ua, vb, u0 + du / 16f);
             }
+        }
+
+        private static void quad (Matrix4f matrix, PoseStack.Pose pose, VertexConsumer buffer, int light, net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,
+                                  float ax, float ay, float az, float bx, float by, float bz,
+                                  float cx, float cy, float cz, float dx, float dy, float dz,
+                                  float u1, float v1, float u2, float v2) {
+            FluidQuad.addVertex(matrix, pose, buffer, light, ax, ay, az, u1, v1, 1f, 1f, 1f, 1f);
+            FluidQuad.addVertex(matrix, pose, buffer, light, bx, by, bz, u1, v2, 1f, 1f, 1f, 1f);
+            FluidQuad.addVertex(matrix, pose, buffer, light, cx, cy, cz, u2, v2, 1f, 1f, 1f, 1f);
+            FluidQuad.addVertex(matrix, pose, buffer, light, dx, dy, dz, u2, v1, 1f, 1f, 1f, 1f);
+
+            FluidQuad.addVertex(matrix, pose, buffer, light, dx, dy, dz, u2, v1, 1f, 1f, 1f, 1f);
+            FluidQuad.addVertex(matrix, pose, buffer, light, cx, cy, cz, u2, v2, 1f, 1f, 1f, 1f);
+            FluidQuad.addVertex(matrix, pose, buffer, light, bx, by, bz, u1, v2, 1f, 1f, 1f, 1f);
+            FluidQuad.addVertex(matrix, pose, buffer, light, ax, ay, az, u1, v1, 1f, 1f, 1f, 1f);
         }
     }
 

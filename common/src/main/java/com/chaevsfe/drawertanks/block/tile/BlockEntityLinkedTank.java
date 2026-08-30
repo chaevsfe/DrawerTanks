@@ -26,6 +26,7 @@ public class BlockEntityLinkedTank extends BlockEntityTank
 
     public BlockEntityLinkedTank (BlockPos pos, BlockState state) {
         super(ModBlockEntities.LINKED_TANK.get(), pos, state);
+        java.util.Arrays.fill(channels, DyeColor.WHITE);
         injectData(new LinkData());
     }
 
@@ -38,7 +39,7 @@ public class BlockEntityLinkedTank extends BlockEntityTank
         for (DyeColor color : channels) {
             if (key.length() > 0)
                 key.append(',');
-            key.append(color == null ? "x" : Integer.toString(color.getId()));
+            key.append(color.getId());
         }
         return key.toString();
     }
@@ -56,8 +57,8 @@ public class BlockEntityLinkedTank extends BlockEntityTank
     public boolean clearChannels () {
         boolean any = false;
         for (int i = 0; i < STRIPS; i++) {
-            any |= channels[i] != null;
-            channels[i] = null;
+            any |= channels[i] != DyeColor.WHITE;
+            channels[i] = DyeColor.WHITE;
         }
         if (!any)
             return false;
@@ -150,11 +151,12 @@ public class BlockEntityLinkedTank extends BlockEntityTank
     {
         @Override
         public void read (ValueInput input) {
-            for (int i = 0; i < STRIPS; i++)
-                channels[i] = null;
+            java.util.Arrays.fill(channels, DyeColor.WHITE);
             input.read("Channels", Codec.INT.listOf()).ifPresent(list -> {
-                for (int i = 0; i < Math.min(list.size(), STRIPS); i++)
-                    channels[i] = list.get(i) < 0 ? null : DyeColor.byId(list.get(i));
+                for (int i = 0; i < Math.min(list.size(), STRIPS); i++) {
+                    DyeColor color = list.get(i) < 0 ? null : DyeColor.byId(list.get(i));
+                    channels[i] = color == null ? DyeColor.WHITE : color;
+                }
             });
 
             // worlds from the coupler era stored fluid locally; fold it into the channel pool once
@@ -164,15 +166,9 @@ public class BlockEntityLinkedTank extends BlockEntityTank
         @Override
         public void write (ValueOutput output) {
             List<Integer> ids = new ArrayList<>();
-            boolean any = false;
-            for (DyeColor color : channels) {
-                ids.add(color == null ? -1 : color.getId());
-                any |= color != null;
-            }
-            if (any)
-                output.store("Channels", Codec.INT.listOf(), ids);
-            else
-                output.discard("Channels");
+            for (DyeColor color : channels)
+                ids.add(color.getId());
+            output.store("Channels", Codec.INT.listOf(), ids);
             output.store("Mirror", Codec.BOOL, true);
             output.discard("Partner");
         }
