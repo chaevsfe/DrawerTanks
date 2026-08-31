@@ -31,5 +31,6 @@ tasks.named<JavaExec>("runServer") {
 
 dependencies {
     compileOnly(Versions.sdModrinthNeoforge)
+    compileOnly("maven.modrinth:jade:${Versions.jadeNeoforge}")
     "localOnlyRuntime"(Versions.sdModrinthNeoforge)
 }

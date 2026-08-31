@@ -22,6 +22,9 @@
         ],
         "client": [
             "com.chaevsfe.drawertanks.DrawerTanksFabricClient"
+        ],
+        "jade": [
+            "com.chaevsfe.drawertanks.integration.Waila"
         ]
     },
     "depends": {

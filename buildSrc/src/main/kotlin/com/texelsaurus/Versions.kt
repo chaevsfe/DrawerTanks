@@ -24,4 +24,7 @@ object Versions {
     // Modrinth version ids for StorageDrawers 26.2-19.1.8 (fabric / neoforge files)
     const val sdModrinthFabric = "maven.modrinth:3bqn07Ul:r3boTHv7"
     const val sdModrinthNeoforge = "maven.modrinth:3bqn07Ul:whhdRPQc"
+
+    const val jadeFabric = "26.2.11+fabric"
+    const val jadeNeoforge = "26.2.8+neoforge"
 }
