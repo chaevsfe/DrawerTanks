@@ -183,10 +183,10 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
             Matrix4f matrix = pose.pose();
             var lock = renderState.lockSprite;
             float z = 1f + 0.002f;
-            float x1 = 7f * UNIT;
-            float x2 = 9f * UNIT;
-            float y1 = 12.4f * UNIT;
-            float y2 = 15.6f * UNIT;
+            float x1 = 7.5f * UNIT;
+            float x2 = 8.5f * UNIT;
+            float y1 = 15f * UNIT;
+            float y2 = 16f * UNIT;
             int light = renderState.lightCoords;
 
             vertex(matrix, pose, vertexConsumer, light, x1, y1, z, lock.getU0(), lock.getV1());

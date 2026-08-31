@@ -150,10 +150,10 @@ public class BlockEntityLinkedDrawerRenderer implements BlockEntityRenderer<Bloc
             Matrix4f matrix = pose.pose();
             var lock = renderState.lockSprite;
             float z = 1f + 0.002f;
-            float x1 = 7f * UNIT;
-            float x2 = 9f * UNIT;
-            float y1 = 12.4f * UNIT;
-            float y2 = 15.6f * UNIT;
+            float x1 = 7.5f * UNIT;
+            float x2 = 8.5f * UNIT;
+            float y1 = 15f * UNIT;
+            float y2 = 16f * UNIT;
 
             face(matrix, pose, vertexConsumer, renderState.lightCoords, x1, y1, x2, y2, z,
                 lock.getU0(), lock.getV0(), lock.getU1(), lock.getV1());

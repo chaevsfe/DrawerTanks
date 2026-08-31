@@ -98,6 +98,9 @@ public class LinkedItemChannels extends SavedData
         public boolean isBlank () {
             if (hasItem())
                 return false;
+            if (attributes.isItemLocked(com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute.LOCK_EMPTY)
+                || attributes.isConcealed() || attributes.isShowingQuantity())
+                return false;
 
             for (int i = 0; i < upgrades.getSlotCount(); i++) {
                 if (!upgrades.getUpgrade(i).isEmpty())
@@ -136,13 +139,17 @@ public class LinkedItemChannels extends SavedData
         }
     }
 
-    private record PoolContents(ItemStack prototype, long count, List<ItemStackWithSlot> upgrades)
+    private record PoolContents(ItemStack prototype, long count, List<ItemStackWithSlot> upgrades,
+                               boolean locked, boolean concealed, boolean showQuantity)
     {
         static final Codec<PoolContents> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
                 ItemStack.CODEC.optionalFieldOf("item", ItemStack.EMPTY).forGetter(PoolContents::prototype),
                 Codec.LONG.optionalFieldOf("count", 0L).forGetter(PoolContents::count),
-                ItemStackWithSlot.CODEC.listOf().optionalFieldOf("upgrades", List.of()).forGetter(PoolContents::upgrades)
+                ItemStackWithSlot.CODEC.listOf().optionalFieldOf("upgrades", List.of()).forGetter(PoolContents::upgrades),
+                Codec.BOOL.optionalFieldOf("locked", false).forGetter(PoolContents::locked),
+                Codec.BOOL.optionalFieldOf("concealed", false).forGetter(PoolContents::concealed),
+                Codec.BOOL.optionalFieldOf("show_quantity", false).forGetter(PoolContents::showQuantity)
             ).apply(instance, PoolContents::new));
     }
 
@@ -173,6 +180,11 @@ public class LinkedItemChannels extends SavedData
         map.forEach((key, contents) -> {
             Pool pool = channels.pool(key);
             pool.upgrades.load(contents.upgrades());
+            pool.attributes.setItemLocked(com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute.LOCK_EMPTY, contents.locked());
+            pool.attributes.setItemLocked(com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute.LOCK_POPULATED, contents.locked());
+            pool.attributes.setIsConcealed(contents.concealed());
+            pool.attributes.setIsShowingQuantity(contents.showQuantity());
+            pool.retainItem = contents.locked();
             pool.set(contents.prototype(), contents.count());
         });
         return channels;
@@ -182,7 +194,10 @@ public class LinkedItemChannels extends SavedData
         Map<String, PoolContents> out = new HashMap<>();
         pools.forEach((key, pool) -> {
             if (!pool.isBlank())
-                out.put(key, new PoolContents(pool.prototype, pool.count, pool.upgrades.toList()));
+                out.put(key, new PoolContents(pool.prototype, pool.count, pool.upgrades.toList(),
+                    pool.attributes.isItemLocked(com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute.LOCK_EMPTY),
+                    pool.attributes.isConcealed(),
+                    pool.attributes.isShowingQuantity()));
         });
         return out;
     }
