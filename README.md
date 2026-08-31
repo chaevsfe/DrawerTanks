@@ -1,4 +1,6 @@
 # Drawer Tanks
+Also on [Modrinth](https://modrinth.com/project/EqkdxKFN) and [CurseForge](https://www.curseforge.com/minecraft/mc-mods/drawertanks/)
+
 
 Fluid storage add-on for [Storage Drawers](https://github.com/chaevsfe/StorageDrawers).
 
