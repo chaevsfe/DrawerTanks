@@ -77,7 +77,7 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
         DyeColor dye = dyeFrom(stack);
         if (dye != null) {
             if (hit.getDirection() != Direction.UP)
-                return InteractionResult.PASS;
+                return InteractionResult.TRY_WITH_EMPTY_HAND;
 
             if (level.isClientSide())
                 return InteractionResult.SUCCESS;
@@ -95,7 +95,7 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
         if (stack.is(Items.SPONGE) || stack.is(Items.WET_SPONGE)) {
             // clearing a channel is a deliberate lid gesture, like dyeing it
             if (hit.getDirection() != Direction.UP)
-                return InteractionResult.PASS;
+                return InteractionResult.TRY_WITH_EMPTY_HAND;
 
             if (level.isClientSide())
                 return InteractionResult.SUCCESS;
@@ -130,9 +130,11 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
             return InteractionResult.PASS;
         }
 
-        // let Storage Drawers keys run their own useOn instead of being stored
-        if (stack.getItem() instanceof com.jaquadro.minecraft.storagedrawers.item.ItemKey)
-            return InteractionResult.PASS;
+        // keys do their work in ItemKey.useOn on the server; the client claims the click so it
+        // predicts the arm swing, the way BlockDrawers.useSlot does
+        if (stack.getItem() instanceof com.jaquadro.minecraft.storagedrawers.item.ItemKey
+            || stack.getItem() instanceof com.jaquadro.minecraft.storagedrawers.item.ItemKeyring)
+            return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.PASS;
 
         return InteractionResult.TRY_WITH_EMPTY_HAND;
     }

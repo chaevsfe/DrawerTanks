@@ -6,6 +6,8 @@ import com.chaevsfe.drawertanks.core.ModBlocks;
 import com.chaevsfe.drawertanks.platform.Bridges;
 import com.jaquadro.minecraft.storagedrawers.api.framing.IFramedSourceBlock;
 import com.jaquadro.minecraft.storagedrawers.block.tile.util.FrameHelper;
+import com.jaquadro.minecraft.storagedrawers.item.ItemKey;
+import com.jaquadro.minecraft.storagedrawers.item.ItemKeyring;
 import com.jaquadro.minecraft.storagedrawers.item.ItemUpgrade;
 import com.mojang.serialization.MapCodec;
 import com.texelsaurus.minecraft.chameleon.inventory.ContentMenuProvider;
@@ -107,6 +109,11 @@ public class BlockTank extends HorizontalDirectionalBlock implements EntityBlock
                 ? InteractionResult.SUCCESS
                 : InteractionResult.FAIL;
         }
+
+        // keys do their work in ItemKey.useOn on the server; the client claims the click so it
+        // predicts the arm swing, the way BlockDrawers.useSlot does
+        if (stack.getItem() instanceof ItemKey || stack.getItem() instanceof ItemKeyring)
+            return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.PASS;
 
         return InteractionResult.TRY_WITH_EMPTY_HAND;
     }
