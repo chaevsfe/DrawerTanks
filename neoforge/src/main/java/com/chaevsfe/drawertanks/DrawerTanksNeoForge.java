@@ -66,7 +66,8 @@ public class DrawerTanksNeoForge
         modEventBus.addListener(this::registerCapabilities);
         modEventBus.addListener(this::buildCreativeTabs);
 
-        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(
+        // highest priority, so another mod's block-use handler cannot swallow the click first
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.HIGHEST,
             (net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock event) -> {
                 var result = com.chaevsfe.drawertanks.block.OffhandMenuOpen.tryOpen(
                     event.getEntity(), event.getLevel(), event.getHand(), event.getHitVec());

@@ -23,12 +23,14 @@ import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
+import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -37,6 +39,8 @@ import net.minecraft.world.level.Level;
 
 public class DrawerTanksFabric implements ModInitializer
 {
+    private static final Identifier BEFORE_OTHERS = ModConstants.loc("offhand_menu");
+
     @Override
     public void onInitialize () {
         if (FabricLoader.getInstance().isModLoaded("forgeconfigapiport"))
@@ -57,7 +61,9 @@ public class DrawerTanksFabric implements ModInitializer
         FluidStorage.SIDED.registerForBlockEntity((be, dir) -> TankFluidStorage.of(be), ModBlockEntities.FRAMED_TANK.get());
         ItemStorage.SIDED.registerForBlockEntity((be, dir) -> LinkedDrawerItemStorage.of(be), ModBlockEntities.LINKED_DRAWER.get());
 
-        UseBlockCallback.EVENT.register(OffhandMenuOpen::tryOpen);
+        // ahead of every default-phase listener, so another mod's block-use hook cannot swallow the click first
+        UseBlockCallback.EVENT.addPhaseOrdering(BEFORE_OTHERS, Event.DEFAULT_PHASE);
+        UseBlockCallback.EVENT.register(BEFORE_OTHERS, OffhandMenuOpen::tryOpen);
 
         AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
             var state = world.getBlockState(pos);
