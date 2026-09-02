@@ -3,6 +3,7 @@ package com.chaevsfe.drawertanks.integration;
 import com.chaevsfe.drawertanks.block.tile.BlockEntityLinkedDrawer;
 import com.chaevsfe.drawertanks.block.tile.BlockEntityLinkedTank;
 import com.chaevsfe.drawertanks.block.tile.BlockEntityTank;
+import com.chaevsfe.drawertanks.block.tile.LinkedChannelData;
 import com.chaevsfe.drawertanks.block.tile.tiledata.TankData;
 import com.chaevsfe.drawertanks.platform.Bridges;
 import com.jaquadro.minecraft.storagedrawers.api.storage.IDrawerAttributes;
@@ -109,13 +110,7 @@ public final class TankOverlay
     }
 
     private static Component channel (DyeColor[] channels) {
-        MutableComponent line = null;
-        for (DyeColor color : channels) {
-            DyeColor dye = color == null ? DyeColor.WHITE : color;
-            Component name = Component.translatable("color.minecraft." + dye.getSerializedName());
-            line = line == null ? name.copy() : line.append("/").append(name);
-        }
-        return line == null ? Component.empty() : line;
+        return LinkedChannelData.channelName(channels);
     }
 
     private static Component fluidName (TankData data) {

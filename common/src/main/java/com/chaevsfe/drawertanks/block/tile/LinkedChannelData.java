@@ -3,6 +3,9 @@ package com.chaevsfe.drawertanks.block.tile;
 import com.chaevsfe.drawertanks.core.ModDataComponents;
 import net.minecraft.core.component.DataComponentGetter;
 import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.ChatFormatting;
 import net.minecraft.world.item.DyeColor;
 
 import java.util.ArrayList;
@@ -27,7 +30,10 @@ public final class LinkedChannelData
     }
 
     public static void apply (DataComponentGetter input, DyeColor[] channels) {
-        List<Integer> ids = input.get(ModDataComponents.LINK_CHANNELS.get());
+        applyIds(input.get(ModDataComponents.LINK_CHANNELS.get()), channels);
+    }
+
+    public static void applyIds (List<Integer> ids, DyeColor[] channels) {
         if (ids == null)
             return;
 
@@ -35,5 +41,34 @@ public final class LinkedChannelData
             DyeColor color = i < ids.size() && ids.get(i) >= 0 ? DyeColor.byId(ids.get(i)) : null;
             channels[i] = color == null ? DyeColor.WHITE : color;
         }
+    }
+
+    public static boolean isBlank (DyeColor[] channels) {
+        for (DyeColor color : channels) {
+            if (color != null && color != DyeColor.WHITE)
+                return false;
+        }
+        return true;
+    }
+
+    public static Component channelName (DyeColor[] channels) {
+        if (isBlank(channels))
+            return Component.translatable("tooltip.drawertanks.link.blank");
+
+        MutableComponent line = null;
+        for (DyeColor color : channels) {
+            DyeColor dye = color == null ? DyeColor.WHITE : color;
+            Component name = Component.translatable("color.minecraft." + dye.getSerializedName());
+            line = line == null ? name.copy() : line.append("/").append(name);
+        }
+        return line == null ? Component.empty() : line;
+    }
+
+    // an item with no component is on the all-white channel
+    public static Component channelLine (List<Integer> ids) {
+        DyeColor[] channels = new DyeColor[BlockEntityLinkedTank.STRIPS];
+        java.util.Arrays.fill(channels, DyeColor.WHITE);
+        applyIds(ids, channels);
+        return Component.translatable("tooltip.drawertanks.link.channel", channelName(channels)).withStyle(ChatFormatting.GRAY);
     }
 }

@@ -205,11 +205,19 @@ public class BlockEntityLinkedTank extends BlockEntityTank
     @Override
     protected void collectImplicitComponents (net.minecraft.core.component.DataComponentMap.Builder builder) {
         LinkedChannelData.collect(builder, channels);
+        // setting null removes a snapshot the block entity may still be carrying from its item
+        LinkedChannels.Pool pool = pool();
+        builder.set(com.chaevsfe.drawertanks.core.ModDataComponents.LINK_FLUID.get(),
+            pool != null && pool.data.hasFluid()
+                ? new com.chaevsfe.drawertanks.components.LinkFluid(pool.data.getFluid(), pool.data.getComponents())
+                : null);
     }
 
     @Override
     protected void applyImplicitComponents (net.minecraft.core.component.DataComponentGetter input) {
         LinkedChannelData.apply(input, channels);
+        // read so vanilla drops it instead of keeping it on the block as a stale component
+        input.get(com.chaevsfe.drawertanks.core.ModDataComponents.LINK_FLUID.get());
 
         // read both so they are consumed rather than stranded as ghost components on the item;
         // any contents ride the existing fold into the channel pool

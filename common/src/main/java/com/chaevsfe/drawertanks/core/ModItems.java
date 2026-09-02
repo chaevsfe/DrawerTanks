@@ -3,7 +3,9 @@ package com.chaevsfe.drawertanks.core;
 import com.chaevsfe.drawertanks.ModConstants;
 import com.chaevsfe.drawertanks.block.BlockFramedTank;
 import com.chaevsfe.drawertanks.block.BlockTank;
+import com.chaevsfe.drawertanks.block.BlockLinkedDrawer;
 import com.chaevsfe.drawertanks.item.ItemFramedTank;
+import com.chaevsfe.drawertanks.item.ItemLinkedDrawer;
 import com.chaevsfe.drawertanks.item.ItemTank;
 import com.texelsaurus.minecraft.chameleon.ChameleonServices;
 import com.texelsaurus.minecraft.chameleon.api.ChameleonInit;
@@ -43,6 +45,8 @@ public final class ModItems
                 return new ItemFramedTank(block, itemProperties);
             if (block instanceof BlockTank)
                 return new ItemTank(block, itemProperties);
+            if (block instanceof BlockLinkedDrawer)
+                return new ItemLinkedDrawer(block, itemProperties);
             return new BlockItem(block, itemProperties);
         });
     }

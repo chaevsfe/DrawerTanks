@@ -34,14 +34,22 @@ public class ItemTank extends BlockItem
             ? "∞"
             : Long.toString(capacity / BlockEntityTank.DROPLETS_PER_BUCKET);
 
+        boolean linked = getBlock() instanceof com.chaevsfe.drawertanks.block.BlockLinkedTank;
+        if (linked) {
+            tooltip.accept(com.chaevsfe.drawertanks.block.tile.LinkedChannelData.channelLine(stack.get(ModDataComponents.LINK_CHANNELS.get())));
+            com.chaevsfe.drawertanks.components.LinkFluid held = stack.get(ModDataComponents.LINK_FLUID.get());
+            if (held != null && held.fluid() != net.minecraft.world.level.material.Fluids.EMPTY)
+                tooltip.accept(Component.translatable("tooltip.drawertanks.link.holds", fluidName(held.fluid(), held.components())).withStyle(ChatFormatting.GRAY));
+            tooltip.accept(Component.translatable("tooltip.drawertanks.capacity", capacityText).withStyle(ChatFormatting.GRAY));
+        }
+
+        // a linked tank item from before channels existed can still carry real contents, which
+        // placing it folds into the channel; keep advertising them
         TankContents contents = stack.get(ModDataComponents.TANK_CONTENTS.get());
         if (contents != null && !contents.isEmpty()) {
-            Component name = Bridges.CLIENT_FLUID != null
-                ? Bridges.CLIENT_FLUID.fluidName(contents.fluid(), contents.components())
-                : Component.translatable(contents.fluid().defaultFluidState().createLegacyBlock().getBlock().getDescriptionId());
             tooltip.accept(Component.translatable("tooltip.drawertanks.contents",
-                name, buckets(contents.amount()), capacityText).withStyle(ChatFormatting.GRAY));
-        } else {
+                fluidName(contents.fluid(), contents.components()), buckets(contents.amount()), capacityText).withStyle(ChatFormatting.GRAY));
+        } else if (!linked) {
             tooltip.accept(Component.translatable("tooltip.drawertanks.empty").withStyle(ChatFormatting.GRAY));
             tooltip.accept(Component.translatable("tooltip.drawertanks.capacity", capacityText).withStyle(ChatFormatting.GRAY));
         }
@@ -78,6 +86,12 @@ public class ItemTank extends BlockItem
                 upgrades.add(slotStack.stack());
         }
         return BlockEntityTank.computeCapacityDroplets(upgrades);
+    }
+
+    private static Component fluidName (net.minecraft.world.level.material.Fluid fluid, net.minecraft.core.component.DataComponentPatch components) {
+        return Bridges.CLIENT_FLUID != null
+            ? Bridges.CLIENT_FLUID.fluidName(fluid, components)
+            : Component.translatable(fluid.defaultFluidState().createLegacyBlock().getBlock().getDescriptionId());
     }
 
     private static String buckets (long droplets) {

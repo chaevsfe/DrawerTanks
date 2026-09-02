@@ -107,11 +107,19 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity implements com.chae
     @Override
     protected void collectImplicitComponents (net.minecraft.core.component.DataComponentMap.Builder builder) {
         LinkedChannelData.collect(builder, channels);
+        // setting null removes a snapshot the block entity may still be carrying from its item
+        LinkedItemChannels.Pool pool = pool();
+        builder.set(com.chaevsfe.drawertanks.core.ModDataComponents.LINK_ITEM.get(),
+            pool != null && pool.hasItem()
+                ? net.minecraft.world.item.ItemStackTemplate.fromNonEmptyStack(pool.prototype.copyWithCount(1))
+                : null);
     }
 
     @Override
     protected void applyImplicitComponents (net.minecraft.core.component.DataComponentGetter input) {
         LinkedChannelData.apply(input, channels);
+        // read so vanilla drops it instead of keeping it on the block as a stale component
+        input.get(com.chaevsfe.drawertanks.core.ModDataComponents.LINK_ITEM.get());
     }
 
     public LinkedItemChannels.Pool pool () {

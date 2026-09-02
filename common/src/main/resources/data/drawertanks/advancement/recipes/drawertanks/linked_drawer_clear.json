@@ -1,0 +1,32 @@
+{
+    "parent": "minecraft:recipes/root",
+    "rewards": {
+        "recipes": [
+            "drawertanks:linked_drawer_clear"
+        ]
+    },
+    "criteria": {
+        "has_linked_drawer": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [
+                    {
+                        "item": "drawertanks:linked_drawer"
+                    }
+                ]
+            }
+        },
+        "has_the_recipe": {
+            "trigger": "minecraft:recipe_unlocked",
+            "conditions": {
+                "recipe": "drawertanks:linked_drawer_clear"
+            }
+        }
+    },
+    "requirements": [
+        [
+            "has_linked_drawer",
+            "has_the_recipe"
+        ]
+    ]
+}

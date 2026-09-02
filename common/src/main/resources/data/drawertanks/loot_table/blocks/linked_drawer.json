@@ -17,7 +17,8 @@
                             "function": "minecraft:copy_components",
                             "source": "block_entity",
                             "include": [
-                                "drawertanks:link_channels"
+                                "drawertanks:link_channels",
+                                "drawertanks:link_item"
                             ]
                         }
                     ]
