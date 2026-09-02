@@ -67,6 +67,16 @@ public class DrawerTanksNeoForge
         modEventBus.addListener(this::buildCreativeTabs);
 
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(
+            (net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock event) -> {
+                var result = com.chaevsfe.drawertanks.block.OffhandMenuOpen.tryOpen(
+                    event.getEntity(), event.getLevel(), event.getHand(), event.getHitVec());
+                if (result != net.minecraft.world.InteractionResult.PASS) {
+                    event.setCanceled(true);
+                    event.setCancellationResult(result);
+                }
+            });
+
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(
             (net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock event) -> {
                 var state = event.getLevel().getBlockState(event.getPos());
                 if (state.getBlock() instanceof com.chaevsfe.drawertanks.block.BlockLinkedDrawer block
@@ -89,6 +99,10 @@ public class DrawerTanksNeoForge
 
             @Override
             public boolean interact (Player player, InteractionHand hand, Level level, BlockPos pos, Direction side) {
+                // FluidUtil plays its sound for every player from the server, so the client must not repeat it
+                if (level.isClientSide())
+                    return true;
+
                 return FluidUtil.interactWithFluidHandler(player, hand, level, pos, side, null);
             }
         };

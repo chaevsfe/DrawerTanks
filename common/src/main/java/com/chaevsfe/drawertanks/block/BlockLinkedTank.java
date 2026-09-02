@@ -7,6 +7,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -48,8 +50,11 @@ public class BlockLinkedTank extends BlockTank
 
             if (level.getBlockEntity(pos) instanceof BlockEntityLinkedTank tank) {
                 int strip = stripAt(state.getValue(FACING), hit, pos);
-                if (tank.setChannelDye(strip, dye) && !player.hasInfiniteMaterials())
-                    stack.shrink(1);
+                if (tank.setChannelDye(strip, dye)) {
+                    if (!player.hasInfiniteMaterials())
+                        stack.shrink(1);
+                    level.playSound(null, pos, SoundEvents.DYE_USE, SoundSource.BLOCKS, 1f, 1f);
+                }
                 return InteractionResult.SUCCESS;
             }
 
@@ -66,6 +71,7 @@ public class BlockLinkedTank extends BlockTank
 
             if (level.getBlockEntity(pos) instanceof BlockEntityLinkedTank tank && tank.clearChannels()) {
                 player.sendOverlayMessage(Component.translatable("message.drawertanks.linked.cleared"));
+                level.playSound(null, pos, SoundEvents.SPONGE_ABSORB, SoundSource.BLOCKS, .5f, 1f);
                 return InteractionResult.SUCCESS;
             }
 

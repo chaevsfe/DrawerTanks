@@ -102,8 +102,12 @@ public class BlockTank extends HorizontalDirectionalBlock implements EntityBlock
         }
 
         if (Bridges.FLUID != null && Bridges.FLUID.isFluidContainer(stack)) {
-            if (level.isClientSide())
+            // the client runs the transfer as well: Fabric's helper plays the bucket sound locally
+            // and skips the acting player on the server, while the NeoForge bridge no-ops off-server
+            if (level.isClientSide()) {
+                Bridges.FLUID.interact(player, hand, level, pos, hit.getDirection());
                 return InteractionResult.SUCCESS;
+            }
 
             return Bridges.FLUID.interact(player, hand, level, pos, hit.getDirection())
                 ? InteractionResult.SUCCESS
