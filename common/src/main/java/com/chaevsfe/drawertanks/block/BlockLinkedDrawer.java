@@ -173,7 +173,10 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
 
     // Right-click puts the held stack in; sneak is the take modifier, matching Storage Drawers.
     public InteractionResult putItems (Level level, BlockPos pos, Player player) {
-        ItemStack stack = player.getItemInHand(InteractionHand.MAIN_HAND);
+        return putItems(level, pos, player, player.getItemInHand(InteractionHand.MAIN_HAND));
+    }
+
+    public InteractionResult putItems (Level level, BlockPos pos, Player player, ItemStack stack) {
         if (stack.isEmpty())
             return InteractionResult.PASS;
 
