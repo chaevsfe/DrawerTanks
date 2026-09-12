@@ -45,7 +45,12 @@ public class DrawerTanksNeoForge
 
         // SERVER so the values are synced to clients; capacity is read for rendering and tooltips
         modContainer.registerConfig(ModConfig.Type.SERVER, NeoforgeTankConfig.SPEC, "drawertanks-server.toml");
-        modEventBus.addListener((ModConfigEvent event) -> {
+        // not the base event: it also fires for Unloading, when the values can no longer be read
+        modEventBus.addListener((ModConfigEvent.Loading event) -> {
+            if (event.getConfig().getSpec() == NeoforgeTankConfig.SPEC)
+                NeoforgeTankConfig.apply();
+        });
+        modEventBus.addListener((ModConfigEvent.Reloading event) -> {
             if (event.getConfig().getSpec() == NeoforgeTankConfig.SPEC)
                 NeoforgeTankConfig.apply();
         });

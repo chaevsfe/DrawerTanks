@@ -53,6 +53,7 @@ tasks.create<TaskPublishCurseForge>("publishCurseForge") {
     Properties.distGameVersions.split(',').forEach { v -> mainFile.addGameVersion(v) }
     mainFile.addModLoader("NeoForge")
     mainFile.addEnvironment("Client", "Server")
+    mainFile.addRequirement("storagedrawers-unofficial-port")
     mainFile.addOptional("jade")
 }
 

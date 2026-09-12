@@ -86,17 +86,21 @@ public class LinkedDrawerResourceHandler implements ResourceHandler<ItemResource
         if (!pool.accepts(incoming))
             return 0;
 
+        // a void channel swallows whatever does not fit, so the overflow counts as accepted
         long space = Math.max(0, pool.capacityFor(incoming) - pool.count);
-        int accepted = (int) Math.min(amount, space);
+        int stored = (int) Math.min(amount, space);
+        int accepted = pool.attributes.isVoid() ? amount : stored;
         if (accepted <= 0)
             return 0;
 
-        journal.updateSnapshots(transaction);
-        commitJournal.updateSnapshots(transaction);
-        if (!pool.hasItem())
-            pool.set(incoming, accepted);
-        else
-            pool.count += accepted;
+        if (stored > 0) {
+            journal.updateSnapshots(transaction);
+            commitJournal.updateSnapshots(transaction);
+            if (!pool.hasItem())
+                pool.set(incoming, stored);
+            else
+                pool.count += stored;
+        }
         return accepted;
     }
 
@@ -107,6 +111,10 @@ public class LinkedDrawerResourceHandler implements ResourceHandler<ItemResource
 
         if (pool.isEmpty() || !ItemStack.isSameItemSameComponents(pool.prototype, resource.toStack(1)))
             return 0;
+
+        // a vending channel hands out copies without ever running down
+        if (pool.attributes.isUnlimitedVending())
+            return amount;
 
         int extracted = (int) Math.min(amount, pool.count);
         if (extracted <= 0)

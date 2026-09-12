@@ -207,15 +207,19 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
         if (!pool.accepts(stack))
             return 0;
 
-        long space = drawer.capacityItems(stack) - pool.count;
-        int moved = (int) Math.min(space, stack.getCount());
+        // a void channel swallows whatever does not fit, so the overflow counts as taken
+        long space = Math.max(0, drawer.capacityItems(stack) - pool.count);
+        int stored = (int) Math.min(space, stack.getCount());
+        int moved = pool.attributes.isVoid() ? stack.getCount() : stored;
         if (moved <= 0)
             return 0;
 
-        if (!pool.hasItem())
-            pool.set(stack, moved);
-        else
-            pool.count += moved;
+        if (stored > 0) {
+            if (!pool.hasItem())
+                pool.set(stack, stored);
+            else
+                pool.count += stored;
+        }
         stack.shrink(moved);
         return moved;
     }
@@ -239,11 +243,15 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
         if (pool == null || pool.isEmpty())
             return;
 
-        int amount = single ? 1 : (int) Math.min(pool.prototype.getMaxStackSize(), pool.count);
+        // a vending channel hands out copies without ever running down
+        boolean vending = pool.attributes.isUnlimitedVending();
+        int amount = single ? 1 : (int) Math.min(pool.prototype.getMaxStackSize(), vending ? Integer.MAX_VALUE : pool.count);
         ItemStack taken = pool.prototype.copyWithCount(amount);
-        pool.count -= amount;
-        if (pool.count <= 0)
-            pool.set(ItemStack.EMPTY, 0);
+        if (!vending) {
+            pool.count -= amount;
+            if (pool.count <= 0)
+                pool.set(ItemStack.EMPTY, 0);
+        }
         drawer.onPoolChanged();
         player.getInventory().placeItemBackInInventory(taken);
         level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, .2f,

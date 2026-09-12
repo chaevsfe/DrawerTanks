@@ -53,6 +53,7 @@ tasks.create<TaskPublishCurseForge>("publishCurseForge") {
     mainFile.addModLoader("Fabric")
     mainFile.addEnvironment("Client", "Server")
     mainFile.addRequirement("fabric-api")
+    mainFile.addRequirement("storagedrawers-unofficial-port")
     mainFile.addOptional("forge-config-api-port")
     mainFile.addOptional("jade")
 }

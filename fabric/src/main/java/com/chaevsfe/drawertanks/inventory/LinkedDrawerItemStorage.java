@@ -42,16 +42,20 @@ public class LinkedDrawerItemStorage extends SnapshotParticipant<LinkedDrawerIte
         if (!pool.accepts(incoming))
             return 0;
 
+        // a void channel swallows whatever does not fit, so the overflow counts as accepted
         long space = Math.max(0, pool.capacityFor(incoming) - pool.count);
-        long accepted = Math.min(maxAmount, space);
+        long stored = Math.min(maxAmount, space);
+        long accepted = pool.attributes.isVoid() ? maxAmount : stored;
         if (accepted <= 0)
             return 0;
 
-        updateSnapshots(transaction);
-        if (!pool.hasItem())
-            pool.set(incoming, accepted);
-        else
-            pool.count += accepted;
+        if (stored > 0) {
+            updateSnapshots(transaction);
+            if (!pool.hasItem())
+                pool.set(incoming, stored);
+            else
+                pool.count += stored;
+        }
         return accepted;
     }
 
@@ -62,6 +66,10 @@ public class LinkedDrawerItemStorage extends SnapshotParticipant<LinkedDrawerIte
 
         if (pool.isEmpty() || !ItemStack.isSameItemSameComponents(pool.prototype, resource.toStack(1)))
             return 0;
+
+        // a vending channel hands out copies without ever running down
+        if (pool.attributes.isUnlimitedVending())
+            return maxAmount;
 
         long extracted = Math.min(maxAmount, pool.count);
         if (extracted <= 0)
