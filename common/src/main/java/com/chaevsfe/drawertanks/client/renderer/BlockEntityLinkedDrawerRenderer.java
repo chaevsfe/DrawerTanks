@@ -110,16 +110,17 @@ public class BlockEntityLinkedDrawerRenderer implements BlockEntityRenderer<Bloc
         if (renderState.itemState != null && !renderState.itemState.isEmpty()) {
             poseStack.pushPose();
             poseStack.translate(0.5f, 0.5f, 1f - FRONT_RECESS + 0.0025f);
-            poseStack.mulPose((new Matrix4f()).scale(10 / 16f, 10 / 16f, 0.001f));
+            poseStack.mulPose((new Matrix4f()).scale(8 / 16f, 8 / 16f, 0.001f));
             poseStack.last().trustedNormals = true;
             poseStack.last().normal().rotateYXZ(-getRotationYForSide2D(side), 0, 0).mul(ITEM_LIGHT_ROTATION_3D);
             renderState.itemState.submit(poseStack, submitNodeCollector, renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0);
             poseStack.popPose();
         }
 
+        // the count sits on the bottom rail below the panel, where Storage Drawers puts it
         if (renderState.countText != null) {
             poseStack.pushPose();
-            poseStack.translate(0.5f, 0.28f, 1f - FRONT_RECESS + 0.005f);
+            poseStack.translate(0.5f, 2 * UNIT, 1f + 0.005f);
             poseStack.scale(1 / 128f, -1 / 128f, 1);
             int width = font.width(renderState.countText);
             submitNodeCollector.submitText(poseStack, -width / 2f, 0,

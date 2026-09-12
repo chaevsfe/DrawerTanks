@@ -28,6 +28,8 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity implements com.chae
     private boolean syncPending;
     private long lastSyncTime = -100;
     private long lastTakeTime = Long.MIN_VALUE / 2;
+    private long lastClickTime = Long.MIN_VALUE / 2;
+    private java.util.UUID lastClickUUID;
     private long mirrorCapacity = -1;
 
     private ItemStack mirrorItem = ItemStack.EMPTY;
@@ -234,6 +236,15 @@ public class BlockEntityLinkedDrawer extends BaseBlockEntity implements com.chae
     @Override
     public void hostChanged () {
         setChanged();
+    }
+
+    // Storage Drawers' double-click rule: the same player again within ten ticks
+    public boolean isRepeatClick (net.minecraft.world.entity.player.Player player) {
+        long now = getLevel() != null ? getLevel().getGameTime() : 0;
+        boolean repeat = now - lastClickTime < 10 && player.getUUID().equals(lastClickUUID);
+        lastClickTime = now;
+        lastClickUUID = player.getUUID();
+        return repeat;
     }
 
     public boolean tryTake (long gameTime) {

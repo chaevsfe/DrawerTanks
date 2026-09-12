@@ -18,6 +18,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
 import com.texelsaurus.minecraft.chameleon.inventory.ContentMenuProvider;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
@@ -147,8 +148,10 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
 
     @Override
     protected InteractionResult useWithoutItem (BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-        // an empty hand opens the upgrade screen; holding something puts it in
-        if (player.getItemInHand(InteractionHand.MAIN_HAND).isEmpty()) {
+        // sneaking with an empty hand opens the upgrade screen; any other click is a deposit, so
+        // the Storage Drawers double-click still sweeps the inventory
+        ItemStack held = player.getItemInHand(InteractionHand.MAIN_HAND);
+        if (held.isEmpty() && player.isSecondaryUseActive()) {
             if (level.isClientSide())
                 return InteractionResult.SUCCESS;
 
@@ -160,7 +163,7 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
             return InteractionResult.PASS;
         }
 
-        return putItems(level, pos, player);
+        return putItems(level, pos, player, held);
     }
 
     @Override
@@ -171,15 +174,10 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
         return new BlockEntityLinkedDrawer.ContentProvider(drawer);
     }
 
-    // Right-click puts the held stack in; sneak is the take modifier, matching Storage Drawers.
-    public InteractionResult putItems (Level level, BlockPos pos, Player player) {
-        return putItems(level, pos, player, player.getItemInHand(InteractionHand.MAIN_HAND));
-    }
-
+    // Right-click puts the given stack in; a second click within ten ticks by the same player also
+    // sweeps every matching stack out of their inventory, the way Storage Drawers does. The click
+    // is consumed either way: a Fail would let the server go on to use the held item
     public InteractionResult putItems (Level level, BlockPos pos, Player player, ItemStack stack) {
-        if (stack.isEmpty())
-            return InteractionResult.PASS;
-
         if (level.isClientSide())
             return InteractionResult.SUCCESS;
 
@@ -190,15 +188,34 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
         if (pool == null)
             return InteractionResult.PASS;
 
-        if (!pool.accepts(stack))
-            return InteractionResult.FAIL;
-
         int moved = insert(drawer, pool, stack);
-        if (moved <= 0)
-            return InteractionResult.FAIL;
+        if (drawer.isRepeatClick(player))
+            moved += sweep(drawer, pool, player);
 
-        drawer.onPoolChanged();
+        if (moved > 0)
+            drawer.onPoolChanged();
         return InteractionResult.SUCCESS;
+    }
+
+    // only a channel that already holds an item is swept, so a stray double-click never pulls
+    // arbitrary stacks into an empty drawer
+    private static int sweep (BlockEntityLinkedDrawer drawer, LinkedItemChannels.Pool pool, Player player) {
+        if (!pool.hasItem())
+            return 0;
+
+        int moved = 0;
+        Inventory inventory = player.getInventory();
+        for (int i = 0; i < Inventory.INVENTORY_SIZE; i++) {
+            ItemStack stack = inventory.getItem(i);
+            if (stack.isEmpty())
+                continue;
+
+            int n = insert(drawer, pool, stack);
+            if (n > 0 && stack.isEmpty())
+                inventory.setItem(i, ItemStack.EMPTY);
+            moved += n;
+        }
+        return moved;
     }
 
     private static int insert (BlockEntityLinkedDrawer drawer, LinkedItemChannels.Pool pool, ItemStack stack) {

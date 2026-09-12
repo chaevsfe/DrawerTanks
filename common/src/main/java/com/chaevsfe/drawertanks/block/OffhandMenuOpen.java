@@ -31,7 +31,7 @@ public final class OffhandMenuOpen
 
     // a plain click with an empty main hand puts the offhand stack into a linked drawer whose
     // channel already holds the same item; the block consumes every main-hand click on the client
-    // (it opens the upgrade screen), so this has to run ahead of it
+    // (a deposit), so this has to run ahead of it
     private static InteractionResult offhandDeposit (Player player, Level level, InteractionHand hand, BlockHitResult hit) {
         if (hand != InteractionHand.MAIN_HAND || !player.getMainHandItem().isEmpty())
             return InteractionResult.PASS;
