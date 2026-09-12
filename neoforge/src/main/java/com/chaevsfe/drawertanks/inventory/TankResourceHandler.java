@@ -81,7 +81,7 @@ public class TankResourceHandler implements ResourceHandler<FluidResource>
 
     @Override
     public int insert (int index, FluidResource resource, int amount, TransactionContext transaction) {
-        if (resource.isEmpty() || amount <= 0)
+        if (resource.isEmpty() || amount <= 0 || tank.isUnresolved())
             return 0;
 
         TankData data = tank.data();

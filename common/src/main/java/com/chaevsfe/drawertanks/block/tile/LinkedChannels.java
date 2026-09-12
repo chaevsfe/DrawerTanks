@@ -7,6 +7,8 @@ import com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.UpgradeData;
 import com.jaquadro.minecraft.storagedrawers.capabilities.BasicDrawerAttributes;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -32,6 +34,13 @@ public class LinkedChannels extends SavedData
     public static class Pool
     {
         public final TankData data = new TankData();
+
+        // the raw saved entry when it could not be decoded; see ParkedChannel
+        Dynamic<?> parked;
+
+        public boolean isUnresolved () {
+            return parked != null;
+        }
         public long version;
 
         LinkedChannels owner;
@@ -109,6 +118,11 @@ public class LinkedChannels extends SavedData
                     public boolean isFluidLocked () {
                         return attributes.isItemLocked(LockAttribute.LOCK_EMPTY);
                     }
+
+                    @Override
+                    public boolean isUnresolved () {
+                        return parked != null;
+                    }
                 };
             }
             return target;
@@ -172,8 +186,10 @@ public class LinkedChannels extends SavedData
             ).apply(instance, ChannelEntry::new));
     }
 
-    private static final Codec<LinkedChannels> CODEC = Codec.unboundedMap(Codec.STRING, ChannelEntry.CODEC)
-        .xmap(LinkedChannels::fromMap, LinkedChannels::toMap);
+    // entries are decoded one by one so a single unreadable channel is parked instead of taking
+    // the rest of the file down with it or being dropped on the next save
+    private static final Codec<LinkedChannels> CODEC = Codec.unboundedMap(Codec.STRING, Codec.PASSTHROUGH)
+        .xmap(LinkedChannels::fromRaw, LinkedChannels::toRaw);
 
     // both loaders currently patch vanilla's unguarded DataFixTypes.update call to tolerate null,
     // but vanilla itself does not; pass a real constant rather than depend on that patch
@@ -194,10 +210,17 @@ public class LinkedChannels extends SavedData
         });
     }
 
-    private static LinkedChannels fromMap (Map<String, ChannelEntry> map) {
+    private static LinkedChannels fromRaw (Map<String, Dynamic<?>> map) {
         LinkedChannels channels = new LinkedChannels();
-        map.forEach((key, entry) -> {
+        map.forEach((key, raw) -> {
             Pool pool = channels.pool(key);
+            DataResult<ChannelEntry> parsed = ChannelEntry.CODEC.parse(raw);
+            if (parsed.result().isEmpty()) {
+                pool.parked = raw;
+                ParkedChannel.report("fluid", key + " " + ParkedChannel.describe(raw), parsed.error().map(Object::toString).orElse("?"));
+                return;
+            }
+            ChannelEntry entry = parsed.result().get();
             pool.upgrades.load(entry.upgrades());
             pool.attributes.setItemLocked(LockAttribute.LOCK_EMPTY, entry.locked());
             pool.attributes.setItemLocked(LockAttribute.LOCK_POPULATED, entry.locked());
@@ -210,17 +233,23 @@ public class LinkedChannels extends SavedData
         return channels;
     }
 
-    private Map<String, ChannelEntry> toMap () {
-        Map<String, ChannelEntry> out = new HashMap<>();
+    private Map<String, Dynamic<?>> toRaw () {
+        Map<String, Dynamic<?>> out = new HashMap<>();
         pools.forEach((key, pool) -> {
+            if (pool.parked != null) {
+                out.put(key, pool.parked);
+                return;
+            }
             if (pool.isEmpty())
                 return;
 
-            out.put(key, new ChannelEntry(pool.data.getFluid(), pool.data.getComponents(), pool.data.getAmount(),
+            ChannelEntry entry = new ChannelEntry(pool.data.getFluid(), pool.data.getComponents(), pool.data.getAmount(),
                 pool.upgrades.toList(),
                 pool.attributes.isItemLocked(LockAttribute.LOCK_EMPTY),
                 pool.attributes.isConcealed(),
-                pool.attributes.isShowingQuantity()));
+                pool.attributes.isShowingQuantity());
+            ChannelEntry.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE, entry).result()
+                .ifPresent(tag -> out.put(key, new Dynamic<>(net.minecraft.nbt.NbtOps.INSTANCE, tag)));
         });
         return out;
     }

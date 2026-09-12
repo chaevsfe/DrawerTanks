@@ -3,6 +3,8 @@ package com.chaevsfe.drawertanks.block.tile;
 import com.chaevsfe.drawertanks.ModConstants;
 import com.chaevsfe.drawertanks.config.TankConfig;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.datafix.DataFixTypes;
@@ -82,6 +84,13 @@ public class LinkedItemChannels extends SavedData
         // a locked channel keeps its item type at zero so nothing else can be pumped in
         public boolean retainItem;
 
+        // the raw saved entry when it could not be decoded; see ParkedChannel
+        Dynamic<?> parked;
+
+        public boolean isUnresolved () {
+            return parked != null;
+        }
+
         public boolean isEmpty () {
             return prototype.isEmpty() || count <= 0;
         }
@@ -91,12 +100,14 @@ public class LinkedItemChannels extends SavedData
         }
 
         public boolean accepts (ItemStack stack) {
+            if (parked != null)
+                return false;
             return !hasItem() || ItemStack.isSameItemSameComponents(prototype, stack);
         }
 
         // worth persisting if it holds items or upgrades
         public boolean isBlank () {
-            if (hasItem())
+            if (parked != null || hasItem())
                 return false;
             if (attributes.isItemLocked(com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute.LOCK_EMPTY)
                 || attributes.isConcealed() || attributes.isShowingQuantity())
@@ -153,8 +164,10 @@ public class LinkedItemChannels extends SavedData
             ).apply(instance, PoolContents::new));
     }
 
-    private static final Codec<LinkedItemChannels> CODEC = Codec.unboundedMap(Codec.STRING, PoolContents.CODEC)
-        .xmap(LinkedItemChannels::fromMap, LinkedItemChannels::toMap);
+    // entries are decoded one by one so a single unreadable channel is parked instead of taking
+    // the rest of the file down with it or being dropped on the next save
+    private static final Codec<LinkedItemChannels> CODEC = Codec.unboundedMap(Codec.STRING, Codec.PASSTHROUGH)
+        .xmap(LinkedItemChannels::fromRaw, LinkedItemChannels::toRaw);
 
     // both loaders currently patch vanilla's unguarded DataFixTypes.update call to tolerate null,
     // but vanilla itself does not; pass a real constant rather than depend on that patch
@@ -175,10 +188,17 @@ public class LinkedItemChannels extends SavedData
         });
     }
 
-    private static LinkedItemChannels fromMap (Map<String, PoolContents> map) {
+    private static LinkedItemChannels fromRaw (Map<String, Dynamic<?>> map) {
         LinkedItemChannels channels = new LinkedItemChannels();
-        map.forEach((key, contents) -> {
+        map.forEach((key, raw) -> {
             Pool pool = channels.pool(key);
+            DataResult<PoolContents> parsed = PoolContents.CODEC.parse(raw);
+            if (parsed.result().isEmpty()) {
+                pool.parked = raw;
+                ParkedChannel.report("item", key + " " + ParkedChannel.describe(raw), parsed.error().map(Object::toString).orElse("?"));
+                return;
+            }
+            PoolContents contents = parsed.result().get();
             pool.upgrades.load(contents.upgrades());
             pool.attributes.setItemLocked(com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute.LOCK_EMPTY, contents.locked());
             pool.attributes.setItemLocked(com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute.LOCK_POPULATED, contents.locked());
@@ -190,14 +210,22 @@ public class LinkedItemChannels extends SavedData
         return channels;
     }
 
-    private Map<String, PoolContents> toMap () {
-        Map<String, PoolContents> out = new HashMap<>();
+    private Map<String, Dynamic<?>> toRaw () {
+        Map<String, Dynamic<?>> out = new HashMap<>();
         pools.forEach((key, pool) -> {
-            if (!pool.isBlank())
-                out.put(key, new PoolContents(pool.prototype, pool.count, pool.upgrades.toList(),
-                    pool.attributes.isItemLocked(com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute.LOCK_EMPTY),
-                    pool.attributes.isConcealed(),
-                    pool.attributes.isShowingQuantity()));
+            if (pool.parked != null) {
+                out.put(key, pool.parked);
+                return;
+            }
+            if (pool.isBlank())
+                return;
+
+            PoolContents contents = new PoolContents(pool.prototype, pool.count, pool.upgrades.toList(),
+                pool.attributes.isItemLocked(com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute.LOCK_EMPTY),
+                pool.attributes.isConcealed(),
+                pool.attributes.isShowingQuantity());
+            PoolContents.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE, contents).result()
+                .ifPresent(tag -> out.put(key, new Dynamic<>(net.minecraft.nbt.NbtOps.INSTANCE, tag)));
         });
         return out;
     }

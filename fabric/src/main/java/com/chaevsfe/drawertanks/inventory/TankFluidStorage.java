@@ -32,7 +32,7 @@ public class TankFluidStorage extends SnapshotParticipant<TankFluidStorage.State
 
     @Override
     public long insert (FluidVariant resource, long maxAmount, TransactionContext transaction) {
-        if (resource.isBlank() || maxAmount <= 0)
+        if (resource.isBlank() || maxAmount <= 0 || tank.isUnresolved())
             return 0;
 
         TankData data = tank.data();

@@ -25,4 +25,9 @@ public abstract class TankTarget
     public boolean isFluidLocked () {
         return false;
     }
+
+    // a linked pool whose saved entry could not be read takes nothing until it reads again
+    public boolean isUnresolved () {
+        return false;
+    }
 }
