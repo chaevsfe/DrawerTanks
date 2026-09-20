@@ -19,5 +19,5 @@ object Properties {
     const val description = "Fluid tanks in the Storage Drawers style"
     const val license = "MIT"
     const val distRelease = "beta"
-    const val distGameVersions = "26.2"
+    const val distGameVersions = "26.1,26.1.1,26.1.2"
 }

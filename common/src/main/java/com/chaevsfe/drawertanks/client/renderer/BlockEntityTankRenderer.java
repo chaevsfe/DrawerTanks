@@ -25,7 +25,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.util.LightCoordsUtil;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -59,7 +59,7 @@ public class BlockEntityTankRenderer implements BlockEntityRenderer<BlockEntityT
         // the tank is a full opaque cube, so light at its own position is zero; sample in front of the window
         if (blockEntity.getLevel() != null && renderState.blockState.hasProperty(BlockTank.FACING)) {
             Direction facing = renderState.blockState.getValue(BlockTank.FACING);
-            renderState.lightCoords = LightCoordsUtil.getLightCoords(blockEntity.getLevel(), blockEntity.getBlockPos().relative(facing));
+            renderState.lightCoords = LevelRenderer.getLightCoords(blockEntity.getLevel(), blockEntity.getBlockPos().relative(facing));
         }
 
         int enforcedLight = blockEntity.upgrades().hasIlluminationUpgrade()

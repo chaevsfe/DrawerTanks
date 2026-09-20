@@ -24,7 +24,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.util.LightCoordsUtil;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
@@ -64,7 +64,7 @@ public class BlockEntityLinkedDrawerRenderer implements BlockEntityRenderer<Bloc
 
         if (blockEntity.getLevel() != null && renderState.blockState.hasProperty(BlockLinkedDrawer.FACING)) {
             Direction facing = renderState.blockState.getValue(BlockLinkedDrawer.FACING);
-            renderState.lightCoords = LightCoordsUtil.getLightCoords(blockEntity.getLevel(), blockEntity.getBlockPos().relative(facing));
+            renderState.lightCoords = LevelRenderer.getLightCoords(blockEntity.getLevel(), blockEntity.getBlockPos().relative(facing));
         }
 
         var channels = blockEntity.getChannels();
