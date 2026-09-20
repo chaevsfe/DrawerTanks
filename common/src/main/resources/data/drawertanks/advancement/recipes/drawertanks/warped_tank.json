@@ -19,7 +19,7 @@
         "has_the_recipe": {
             "trigger": "minecraft:recipe_unlocked",
             "conditions": {
-                "recipe": "drawertanks:warped_tank"
+                "recipes": "drawertanks:warped_tank"
             }
         }
     },

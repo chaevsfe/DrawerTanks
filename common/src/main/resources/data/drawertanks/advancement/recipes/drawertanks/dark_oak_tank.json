@@ -19,7 +19,7 @@
         "has_the_recipe": {
             "trigger": "minecraft:recipe_unlocked",
             "conditions": {
-                "recipe": "drawertanks:dark_oak_tank"
+                "recipes": "drawertanks:dark_oak_tank"
             }
         }
     },

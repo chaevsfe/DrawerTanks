@@ -19,7 +19,7 @@
         "has_the_recipe": {
             "trigger": "minecraft:recipe_unlocked",
             "conditions": {
-                "recipe": "drawertanks:bamboo_tank"
+                "recipes": "drawertanks:bamboo_tank"
             }
         }
     },

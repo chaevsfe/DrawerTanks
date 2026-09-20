@@ -19,7 +19,7 @@
         "has_the_recipe": {
             "trigger": "minecraft:recipe_unlocked",
             "conditions": {
-                "recipe": "drawertanks:crimson_tank"
+                "recipes": "drawertanks:crimson_tank"
             }
         }
     },
