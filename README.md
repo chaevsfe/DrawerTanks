@@ -5,7 +5,7 @@ Also on [Modrinth](https://modrinth.com/project/EqkdxKFN) and [CurseForge](https
 Fluid storage add-on for [Storage Drawers](https://github.com/chaevsfe/StorageDrawers).
 
 
-Requires Storage Drawers 19.1.8 or newer. Minecraft 26.2, Fabric and NeoForge.
+Requires Storage Drawers: either the [unofficial port](https://github.com/chaevsfe/StorageDrawers) 19.1.8 or newer, or Texelsaur's own 26.1 builds. Minecraft 26.1, 26.1.1 and 26.1.2, Fabric and NeoForge.
 
 ### Usage
 
