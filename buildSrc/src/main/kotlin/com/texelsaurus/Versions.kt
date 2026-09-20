@@ -21,11 +21,10 @@ object Versions {
     const val fabricLoader = "0.19.5"
 
     const val storageDrawers = "19.1.8"
-    // Storage Drawers has no 26.3 build yet, from us or upstream; these 26.2 files are Mojang-mapped
-    // so they still compile, but nothing can run this branch until a 26.3 Storage Drawers exists
-    // Modrinth version ids for StorageDrawers 26.2-19.1.8 (fabric / neoforge files)
-    const val sdModrinthFabric = "maven.modrinth:3bqn07Ul:r3boTHv7"
-    const val sdModrinthNeoforge = "maven.modrinth:3bqn07Ul:whhdRPQc"
+    // the unofficial port has no 26.3 build, so this branch builds against Texelsaur's own
+    // Modrinth version ids for StorageDrawers 26.3.0.0 (fabric / neoforge files)
+    const val sdModrinthFabric = "maven.modrinth:guitPqEi:KEPMtgL1"
+    const val sdModrinthNeoforge = "maven.modrinth:guitPqEi:JwkKovSz"
 
     const val jadeFabric = "26.3.1+fabric"
     const val jadeNeoforge = "26.3.1+neoforge"
