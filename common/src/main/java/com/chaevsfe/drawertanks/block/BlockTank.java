@@ -9,7 +9,6 @@ import com.jaquadro.minecraft.storagedrawers.block.tile.util.FrameHelper;
 import com.jaquadro.minecraft.storagedrawers.item.ItemKey;
 import com.jaquadro.minecraft.storagedrawers.item.ItemKeyring;
 import com.jaquadro.minecraft.storagedrawers.item.ItemUpgrade;
-import com.mojang.serialization.MapCodec;
 import com.texelsaurus.minecraft.chameleon.inventory.ContentMenuProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -35,16 +34,9 @@ import org.jetbrains.annotations.Nullable;
 
 public class BlockTank extends HorizontalDirectionalBlock implements EntityBlock, IFramedSourceBlock
 {
-    public static final MapCodec<BlockTank> CODEC = simpleCodec(BlockTank::new);
-
     public BlockTank (Properties properties) {
         super(properties);
         registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
-    }
-
-    @Override
-    protected MapCodec<? extends HorizontalDirectionalBlock> codec () {
-        return CODEC;
     }
 
     @Override

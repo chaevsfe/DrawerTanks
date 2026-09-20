@@ -5,13 +5,13 @@ import com.chaevsfe.drawertanks.block.tile.BlockEntityTank;
 import com.jaquadro.minecraft.storagedrawers.item.ItemUpgrade;
 import com.chaevsfe.drawertanks.block.tile.LinkedItemChannels;
 import com.chaevsfe.drawertanks.core.ModBlockEntities;
-import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Prediction;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -39,16 +39,9 @@ import org.jetbrains.annotations.Nullable;
 
 public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements EntityBlock
 {
-    public static final MapCodec<BlockLinkedDrawer> CODEC = simpleCodec(BlockLinkedDrawer::new);
-
     public BlockLinkedDrawer (Properties properties) {
         super(properties);
         registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
-    }
-
-    @Override
-    protected MapCodec<? extends HorizontalDirectionalBlock> codec () {
-        return CODEC;
     }
 
     @Override
@@ -270,7 +263,7 @@ public class BlockLinkedDrawer extends HorizontalDirectionalBlock implements Ent
                 pool.set(ItemStack.EMPTY, 0);
         }
         drawer.onPoolChanged();
-        player.getInventory().placeItemBackInInventory(taken);
+        player.getInventory().placeItemBackInInventory(taken, Prediction.SERVER_ONLY);
         level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, .2f,
             ((level.getRandom().nextFloat() - level.getRandom().nextFloat()) * .7f + 1) * 2);
     }

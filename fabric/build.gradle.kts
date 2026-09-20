@@ -15,11 +15,11 @@ dependencies {
 
     compileOnly(Versions.sdModrinthFabric)
     compileOnly("maven.modrinth:jade:${Versions.jadeFabric}")
-    compileOnly("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:26.2.1") {
+    compileOnly("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:26.3.0") {
         exclude(group = "net.fabricmc.fabric-api")
     }
     "localOnlyRuntime"(Versions.sdModrinthFabric)
-    "localOnlyRuntime"("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:26.2.1") {
+    "localOnlyRuntime"("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:26.3.0") {
         exclude(group = "net.fabricmc.fabric-api")
     }
 }
